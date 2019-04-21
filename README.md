@@ -1,0 +1,2 @@
+# jsldb
+JavaScript Local Database
