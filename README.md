@@ -4,6 +4,8 @@ Store database information for a Node.js application in the local directory. JSL
 
 ## Getting Started
 
+* NOTE: This project is currently a work in progress and, as such, will be under heavy development *
+
 ### Node.js
 
 ```javascript
@@ -69,5 +71,5 @@ app.delete('/table1/:id', (req, res) => {
     })
 });
 
-app.listen(8080, 127.0.0.1);
+app.listen(8080, '127.0.0.1');
 ```
