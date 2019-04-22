@@ -9,7 +9,8 @@ const baseDir = path.dirname(require.main.filename);
 
 // Emit a signal upon error
 const EventEmitter = require('events');
-const emit = new EventEmitter().emit;
+const ee = new EventEmitter();
+const emit = ee.emit;
 const DBERROR = 'DBERROR';
 
 const supportedTypes = [ 'number', 'string', 'date' ];
