@@ -86,7 +86,7 @@ exports.create = (name, tables, autosave = false)  => {
         db.autosave = autosave;
         verifyTables(tables, (res, data) => {
             if (!res) {
-                throw new Error('Type given, ${data}, does not conform to a supported type.');
+                throw new Error(`Type given, ${data}, does not conform to a supported type.`);
             } else {
                 db.tables = data;
                 for (let key in data) {
