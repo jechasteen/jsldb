@@ -7,12 +7,6 @@ const fs = require('fs');
 const path = require('path');
 const baseDir = path.dirname(require.main.filename);
 
-// Emit a signal upon error
-const EventEmitter = require('events');
-const ee = new EventEmitter();
-const emit = ee.emit;
-const DBERROR = 'DBERROR';
-
 const supportedTypes = [ 'number', 'string', 'date' ];
 
 // Holds the database in memory once we have either created or loaded from file.
@@ -87,12 +81,12 @@ exports.create = (name, tables, autosave = false)  => {
     db.path = path.join(baseDir, `${name}.db.json`);
     const dbFilename = name + '.db.json';
     if (fs.existsSync(db.path)) {
-        emit(DBERROR, new Error(`Database ${name} already exists`));        
+        throw new Error(`Database ${name} already exists`);        
     } else {
         db.autosave = autosave;
         verifyTables(tables, (res, data) => {
             if (!res) {
-                emit(DBERROR, 'Type given, ${data}, does not conform to a supported type.');
+                throw new Error('Type given, ${data}, does not conform to a supported type.');
             } else {
                 db.tables = data;
                 for (let key in data) {
@@ -116,7 +110,7 @@ exports.connect = (name) => {
         // TODO: should this next call be in a try/catch block in case parse error?
         db = JSON.parse(fs.readFileSync(db.path));
     } else {
-        emit(DBERROR, new Error(`Database ${name} does not exist`));
+        throw new Error(`Database ${name} does not exist`);
     }
 }
 
@@ -163,7 +157,7 @@ const checkField = (type, value) => {
     } else if (s[0] === 'array' && s[1] === 'id') {
         // s[0] = 'array', s[1] = 'id', s[2] = 'table'
         if (!db[s[2]]) {
-            emit(DBERROR, new Error(`Referenced table ${s[2]} does not exist.`))
+            throw new Error(`Referenced table ${s[2]} does not exist.`);
         } else {
             try {
                 value.forEach( v => {
@@ -180,7 +174,7 @@ const checkField = (type, value) => {
     } else if (s[0] === 'id') {
         // t[0] = 'id', t[1] = 'table'
         if (!db[s[1]]) {
-            emit(DBERROR, new Error(`Referenced table ${s[2]} does not exist.`))
+            throw new Error(`Referenced table ${s[2]} does not exist.`);
         } else {
             if (db[s[1]][value]) {
                 return true;
