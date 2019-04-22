@@ -1,0 +1,29 @@
+{
+  "name": "jsldb",
+  "version": "0.0.1",
+  "description": "JavaScript Local Database",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jechasteen/jsldb.git"
+  },
+  "keywords": [
+    "JavaScript",
+    "database",
+    "JSON",
+    "object",
+    "local"
+  ],
+  "author": "Jonathan Chasteen <jonathan.chasteen@live.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jechasteen/jsldb/issues"
+  },
+  "homepage": "https://github.com/jechasteen/jsldb#readme"
+}

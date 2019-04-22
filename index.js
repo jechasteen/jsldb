@@ -82,7 +82,7 @@ const verifyTables = (unverifiedTables, cb) => {
  * @param {boolean} autosave - Whether to save automatically at creation and on changes, default false
  * @tutorial tables
  */
-module.exports.create = (name, tables, autosave = false)  => {
+exports.create = (name, tables, autosave = false)  => {
     db.path = path.join(baseDir, `${name}.db.json`);
     const dbFilename = name + '.db.json';
     if (fs.existsSync(db.path)) {
@@ -109,7 +109,7 @@ module.exports.create = (name, tables, autosave = false)  => {
  * @param {string} name - The name of the database to be loaded
  * @throws {DBERROR} If the database given does not exist
  */
-module.exports.connect = (name) => {
+exports.connect = (name) => {
     db.path = path.join(baseDir, `${name}.db.json`)
     if (fs.existsSync(db.path)) {
         // TODO: should this next call be in a try/catch block in case parse error?
@@ -196,7 +196,7 @@ const checkField = (type, value) => {
  * @param {Object} entry - An object that conforms to the schema specified in the tables object
  * @param {function} cb - Callback function.
  */
-module.exports.insert = (table, entry, cb = () => {}) => {
+exports.insert = (table, entry, cb = () => {}) => {
     const schema = db.tables[table];
 
     for (let k in entry) {
@@ -221,7 +221,7 @@ module.exports.insert = (table, entry, cb = () => {}) => {
  * @param {string} field - The field to be overwritten
  * @param {any} value - The value to be written. Must conform to table specification for type.
  */
-module.exports.setFieldById = (table, id, field, value, cb = () => {}) => {
+exports.setFieldById = (table, id, field, value, cb = () => {}) => {
     if (checkField(db.tables[table][field].type, value)) {
         db[table][id][field] = value;
         cb(true, db[table][id]);
@@ -239,7 +239,7 @@ module.exports.setFieldById = (table, id, field, value, cb = () => {}) => {
  * @param {number} id - The id of the entry to be deleted
  * @returns {boolean} - The result of the deletion
  */
-module.exports.delete = (table, id, cb = () => {}) => {
+exports.delete = (table, id, cb = () => {}) => {
     let result = delete db[table][parseInt(id)];
     console.log('result: ', result);
     if (result) {
@@ -259,7 +259,7 @@ module.exports.delete = (table, id, cb = () => {}) => {
  * @param {function} cb - Callback function. First parameter is the result of the operation (true|false), second is
  * the entry that was retrieved
  */
-module.exports.getById = (table, id, cb) => {
+exports.getById = (table, id, cb) => {
     if (db[table][parseInt(id)]) {
         cb(true, db[table][parseInt(id)]);
     } else {
@@ -271,7 +271,7 @@ module.exports.getById = (table, id, cb) => {
  * Fetch the whole database object in memory
  * @returns {Object}
  */
-module.exports.db = () => {
+exports.db = () => {
     return db;
 }
 
@@ -279,7 +279,7 @@ module.exports.db = () => {
  * Write the database object in memory to file
  * @returns {boolean} - The result of the write operation
  */
-module.exports.save = () => {
+exports.save = () => {
     if (fs.existsSync(db.path)) {
         fs.copyFileSync(db.path, path.join(db.path + '.backup'));
     }
