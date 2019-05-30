@@ -81,7 +81,7 @@ exports.create = (name, tables, autosave = false)  => {
     db.path = path.join(baseDir, `${name}.db.json`);
     const dbFilename = name + '.db.json';
     if (fs.existsSync(db.path)) {
-        throw new Error(`Database ${name} already exists`);        
+        throw new Error(`Database ${name} already exists`);
     } else {
         db.autosave = autosave;
         verifyTables(tables, (res, data) => {
@@ -96,6 +96,7 @@ exports.create = (name, tables, autosave = false)  => {
             }
         });
     }
+    return true;
 }
 
 /**
@@ -236,7 +237,6 @@ exports.setFieldById = (table, id, field, value, cb = () => {}) => {
  */
 exports.delete = (table, id, cb = () => {}) => {
     let result = delete db[table][parseInt(id)];
-    console.log('result: ', result);
     if (result) {
         cb(true, id);
     } else {
@@ -264,9 +264,13 @@ exports.getById = (table, id, cb) => {
 
 /**
  * Fetch the whole database object in memory
+ * @param {function} cb - Callback function
  * @returns {Object}
  */
-exports.db = () => {
+exports.getAll = (cb) => {
+    if (typeof cb === 'function') {
+        cb(true, db);
+    }
     return db;
 }
 
@@ -279,4 +283,53 @@ exports.save = () => {
         fs.copyFileSync(db.path, path.join(db.path + '.backup'));
     }
     return fs.writeFileSync(db.path, JSON.stringify(db), { encoding: 'utf8' });
+}
+
+function findAll(table, field, value) {
+    let res = []
+    console.log(table, field);
+    for (key in table) {
+        if (table[key][field] === value) {
+            console.log('found');
+            res.push(table[key]);
+        }
+    }
+    return res;
+}
+
+/**
+ * Query a table using query object. Finds ALL matching entries
+ * The currently supported query type is `fieldName: 'valueToMatch'`
+ * @param {string} tableName - The name of the table to be queried
+ * @param {object} query - An object composed of the `field: value` pairs to be matched
+ * @param {function} cb - A callback. If the query was successful (even if the results are empty), the first parameter will be true, if there was an error in the query it will be false.
+ * the second parameter will be the found entries as an array (or undefined if none), or if there was an error a string describing the error.
+ */
+
+exports.find = (tableName, query, cb) => {
+    if (query === {}) { cb(db[tableName]) }
+
+    const fields = (() => {
+        let f = [];
+        for (let key in db.tables[tableName]) {
+            f.push(key);
+        }
+        return f;
+    })()
+
+    console.log(fields);
+
+    for (let key in query) {
+        console.log(key.toString());
+        if (fields.indexOf(key.toString()) > -1) {
+            const results = findAll(db[tableName], key, query[key]);
+            if (results.length > 0) {
+                cb(true, results);
+            } else {
+                cb(true, undefined);
+            }
+        } else {
+            cb(false, `Query table name does not exist, table: ${tableName}, field ${key}`);
+        }
+    }
 }
