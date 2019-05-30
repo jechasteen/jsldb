@@ -12,6 +12,9 @@ Store database information for a Node.js application in the local directory. JSL
 const express = require('express');
 const app = express();
 const jsl = require('jsldb');
+const bodyParser = require('body-parser');
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 const tables = {
     table1: {
@@ -38,7 +41,15 @@ const tables = {
     }
 }
 
-jsl.connect('db', tables, true);
+// One or the other depending on circumstance {
+
+jsl.create('newdb', tables, true)
+
+// OR
+
+jsl.connect('newdb');
+
+// }
 
 app.get('/table1/:id', (req, res) => {
     jsl.getById('table1', req.params.id, (success, data) => {
@@ -51,7 +62,7 @@ app.get('/table1/:id', (req, res) => {
 });
 
 app.post('/table1', (req, res) => {
-    // Pass data from the browser to the server wrapped inside an object named entry
+    // Pass data from the browser to the server wrapped inside an object named entry attached to the request body
     jsl.insert('table1', req.body.entry, (success, data) => {
         if (success) {
             res.redirect('/table1');
