@@ -19,6 +19,7 @@ db.autosave = false;
 /**
  * Checks the fields object for errors. If successful, the first parameter passed will be true, and the second will contain
  * a verified object. If it fails, it will return false as the first parameter, and the failed type text as a string.
+ * Note: this function was intended to be called when a new database is created.
  * @param {object} tables - A schema object used to create and verify db entries. This object is passed to create()
  * @param {function} cb - Function has the arguments (result: boolean, [failedType: string || passedTable: object])
  */
@@ -28,14 +29,12 @@ const verifyTables = (unverifiedTables, cb) => {
     for (let key in unverifiedTables) {
         tables.push(key);
     }
-    //console.log(unverifiedTables);
 
     tables.forEach( t => {
         let curTable = unverifiedTables[t]
         for (let k in curTable) {
             const s = curTable[k].type.split(' ');
             const f = curTable[k];
-
             if (s.length === 1) {
                 // type is basic            
                 if (supportedTypes.indexOf(f.type) < 0) {
@@ -45,10 +44,14 @@ const verifyTables = (unverifiedTables, cb) => {
                 }
             } else if (s.length === 2) {
                 // either "array ${type}" or "id ${table}"
-                if (f !== 'array') {
-                    cb(false, f.type);
-                } else if (s[0] === 'id') {
+                if (s[0] === 'id') {
                     if (tables.indexOf(s[1]) < 0) {
+                        return cb(false, f.type);
+                    } else {
+                        continue;
+                    }
+                } else if (s[0] === 'array') { 
+                    if (supportedTypes.indexOf(s[1]) < 0) {
                         return cb(false, f.type);
                     } else {
                         continue;
@@ -75,7 +78,9 @@ const verifyTables = (unverifiedTables, cb) => {
  * @param {string} name - The name of the new database
  * @param {Object} tables - A [tables]{@link docs/tables} schema object
  * @param {boolean} autosave - Whether to save automatically at creation and on changes, default false
+ * @throws {Error} if the database given already exists, or if verify tables returns a check error.
  * @tutorial tables
+ * @returns {boolean} - true if the database creation completed successfully. Undefined otherwise.
  */
 exports.create = (name, tables, autosave = false)  => {
     db.path = path.join(baseDir, `${name}.db.json`);
@@ -103,7 +108,7 @@ exports.create = (name, tables, autosave = false)  => {
  * Connect to an existing database. Function expects just the "name" of the database as an abbreviation of the 
  * filename name.db.json which this function will attempt to load.
  * @param {string} name - The name of the database to be loaded
- * @throws {DBERROR} If the database given does not exist
+ * @throws {Error} if the database given does not exist
  */
 exports.connect = (name) => {
     db.path = path.join(baseDir, `${name}.db.json`)
@@ -118,6 +123,8 @@ exports.connect = (name) => {
 /** checks if the value passed matches the type specified 
  * @param {string} - the type of the value to be tested: 'number', 'string', 'date', 'id ${table}', or 'array ${type}'
  * @param {value} - the value to be tested
+ * @return {boolean} - True if the test passed, false if it failed
+ * @throws {Error} - If the referenced table does not exist (when referencing by _id)
 */
 const checkField = (type, value) => {
     const valid = {
@@ -173,7 +180,6 @@ const checkField = (type, value) => {
             
         }
     } else if (s[0] === 'id') {
-        // t[0] = 'id', t[1] = 'table'
         if (!db[s[1]]) {
             throw new Error(`Referenced table ${s[2]} does not exist.`);
         } else {
@@ -187,10 +193,11 @@ const checkField = (type, value) => {
 }
 
 /**
- * Add a new entry to a table
+ * Add a new entry to a table. The `_id` is created incrementally. (However, it could just as easily be a UUID by replacing `id` with a generated UUID)
  * @param {string} table - The name of the table to add to
  * @param {Object} entry - An object that conforms to the schema specified in the tables object
  * @param {function} cb - Callback function.
+ * @returns {boolean} - The result of the insertion operation.
  */
 exports.insert = (table, entry, cb = () => {}) => {
     const schema = db.tables[table];
@@ -198,16 +205,23 @@ exports.insert = (table, entry, cb = () => {}) => {
     for (let k in entry) {
         if (!checkField(schema[k].type, entry[k])) {
             cb(false, {k: entry[k]});
+            return false;
         } else {
             continue;
         }
     }
 
-    db[table][db.tables[table].count++] = entry;
+    const id = db.tables[table].count++;
+
+    db[table][id] = entry;
+    db[table][id]._id = id;
+
     if (db.autosave) {
-        this.save();
+        save();
     }
+
     cb(true, entry);
+    return true;
 }
 
 /**
@@ -216,24 +230,27 @@ exports.insert = (table, entry, cb = () => {}) => {
  * @param {number} id - The id to be selected
  * @param {string} field - The field to be overwritten
  * @param {any} value - The value to be written. Must conform to table specification for type.
+ * @returns {boolean} - The result of the set operation.
  */
 exports.setFieldById = (table, id, field, value, cb = () => {}) => {
     if (checkField(db.tables[table][field].type, value)) {
         db[table][id][field] = value;
         cb(true, db[table][id]);
         if (db.autosave) {
-            this.save();
+            save();
         }
+        return true;
     } else {
         cb(false, {field: value});
+        return false;
     }
 }
 
 /**
- * Delete an entry by id
+ * Delete an entry by id.
  * @param {string} table - The table to be targeted
  * @param {number} id - The id of the entry to be deleted
- * @returns {boolean} - The result of the deletion
+ * @param {callback} cb - A callback function passed the deletion result and the id that was deleted
  */
 exports.delete = (table, id, cb = () => {}) => {
     let result = delete db[table][parseInt(id)];
@@ -243,35 +260,49 @@ exports.delete = (table, id, cb = () => {}) => {
         cb(false, id);
     }
     if (db.autosave) {
-        this.save();
+        save();
     }
 }
 
 /**
- * Fetch an entry
+ * Fetch an entry by its id
  * @param {string} table - The table to be targeted
  * @param {number} id - The id of the entry to be retrieved
  * @param {function} cb - Callback function. First parameter is the result of the operation (true|false), second is
  * the entry that was retrieved
+ * @returns {object} - The object which was found, or, if not found, undefined;
  */
-exports.getById = (table, id, cb) => {
-    if (db[table][parseInt(id)]) {
-        cb(true, db[table][parseInt(id)]);
+exports.findById = (table, id, cb = () => {}) => {
+    const found = db[table][parseInt(id)];
+    if (found) {
+        cb(true, found);
     } else {
         cb(false, id);
     }
+    return found;
 }
 
 /**
  * Fetch the whole database object in memory
- * @param {function} cb - Callback function
- * @returns {Object}
+ * @param {function} cb - Callback function passed the full database object as a parameter
+ * @returns {Object} - The full database object
  */
 exports.getAll = (cb) => {
     if (typeof cb === 'function') {
-        cb(true, db);
+        cb(db);
     }
     return db;
+}
+
+/*!
+ * A private save function, so that we can not only use it internally, but also externally.
+ * This is the function called each time there is an autosave.
+ */
+const save = () => {
+    if (fs.existsSync(db.path)) {
+        fs.copyFileSync(db.path, path.join(db.path + '.backup'));
+    }
+    return fs.writeFileSync(db.path, JSON.stringify(db), { encoding: 'utf8' });
 }
 
 /**
@@ -279,18 +310,20 @@ exports.getAll = (cb) => {
  * @returns {boolean} - The result of the write operation
  */
 exports.save = () => {
-    if (fs.existsSync(db.path)) {
-        fs.copyFileSync(db.path, path.join(db.path + '.backup'));
-    }
-    return fs.writeFileSync(db.path, JSON.stringify(db), { encoding: 'utf8' });
+    return save();
 }
 
+/**
+ * Find all items in a table with given field matching value.
+ * @param {string} table - The name of the table to be searched
+ * @param {field} field - The field to match
+ * @param {value} value - The value to find in the field
+ * @returns {object} - An array of objects matching the given parameters
+ */
 function findAll(table, field, value) {
     let res = []
-    console.log(table, field);
     for (key in table) {
         if (table[key][field] === value) {
-            console.log('found');
             res.push(table[key]);
         }
     }
@@ -300,12 +333,12 @@ function findAll(table, field, value) {
 /**
  * Query a table using query object. Finds ALL matching entries
  * The currently supported query type is `fieldName: 'valueToMatch'`
+ * Caveat: not yet tested with `date: [Date object]`
  * @param {string} tableName - The name of the table to be queried
  * @param {object} query - An object composed of the `field: value` pairs to be matched
  * @param {function} cb - A callback. If the query was successful (even if the results are empty), the first parameter will be true, if there was an error in the query it will be false.
  * the second parameter will be the found entries as an array (or undefined if none), or if there was an error a string describing the error.
  */
-
 exports.find = (tableName, query, cb) => {
     if (query === {}) { cb(db[tableName]) }
 
@@ -317,11 +350,8 @@ exports.find = (tableName, query, cb) => {
         return f;
     })()
 
-    console.log(fields);
-
     for (let key in query) {
-        console.log(key.toString());
-        if (fields.indexOf(key.toString()) > -1) {
+        if (fields.indexOf(key) > -1) {
             const results = findAll(db[tableName], key, query[key]);
             if (results.length > 0) {
                 cb(true, results);

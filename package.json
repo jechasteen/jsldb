@@ -25,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/jechasteen/jsldb/issues"
   },
-  "homepage": "https://github.com/jechasteen/jsldb#readme"
+  "homepage": "https://github.com/jechasteen/jsldb#readme",
+  "devDependencies": {
+    "faker": "^4.1.0"
+  }
 }
