@@ -6,6 +6,12 @@ Store database information for a Node.js application in the local directory. JSL
 
 *NOTE: This project is currently a work in progress and, as such, will be under heavy development*
 
+### Schema / Table Definition
+
+Tables are defined in a manner similar to mongoose, where an object defines the types of each field.
+
+See [the tables docs](docs/tables.md)
+
 ### Node.js
 
 ```javascript
