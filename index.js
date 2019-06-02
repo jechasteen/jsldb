@@ -111,10 +111,16 @@ exports.create = (name, tables, autosave = false)  => {
  * @throws {Error} if the database given does not exist
  */
 exports.connect = (name) => {
-    db.path = path.join(baseDir, `${name}.db.json`)
-    if (fs.existsSync(db.path)) {
+    let dbpath = path.join(baseDir, `${name}.db.json`)
+    console.log("PATH", dbpath);
+    if (fs.existsSync(dbpath)) {
         // TODO: should this next call be in a try/catch block in case parse error?
-        db = JSON.parse(fs.readFileSync(db.path));
+        db = JSON.parse(fs.readFileSync(dbpath));
+        if (db.path === dbpath) {
+            return true;
+        } else {
+            return false;
+        }
     } else {
         throw new Error(`Database ${name} does not exist`);
     }
@@ -167,17 +173,22 @@ const checkField = (type, value) => {
         if (!db[s[2]]) {
             throw new Error(`Referenced table ${s[2]} does not exist.`);
         } else {
-            try {
+            if (value.length) {
+                // value has a length property, probably an array
                 value.forEach( v => {
                     if (!db[s[2]][value]) {
                         return false;
                     }
                 });
                 return true;
-            } catch (e) {
-                return false;
+            } else {
+                // single value
+                if (!db[s[2][value]]) {
+                    return false;
+                } else {
+                    return true;
+                }
             }
-            
         }
     } else if (s[0] === 'id') {
         if (!db[s[1]]) {
