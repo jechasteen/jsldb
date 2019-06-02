@@ -152,7 +152,7 @@ if (runtype === 'create') {
         t: 8900
     };
 
-    // DO THE STUFF (HOLY CRAP IT'S A LOT! almost 7M)
+    // DO THE STUFF (HOLY CRAP IT'S A LOT!)
     (() => {
         console.log(`Creating ${q.e + q.c + q.t} entries`);
         // create the employees
@@ -168,7 +168,7 @@ if (runtype === 'create') {
         // create the tickets
         console.log('Creating tickets');
         for (let i = 0; i < q.t; i++) {
-            if (!db.insert('tickets', create.ticket())) {
+            if (db.insert('tickets', create.ticket())) {
                 i--;
             }
             

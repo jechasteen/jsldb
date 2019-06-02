@@ -149,9 +149,9 @@ const checkField = (type, value) => {
         // We know it is a simple type
         if (valid[type] && valid[type](value)) return true;
         else return false;
-    } else if (s[0] === 'array' && s[1] !== 'id') {
-        // s[0] = 'array', s[1] = 'id', s[2] = 'type'
-        const memberType = s[2];
+    } else if (s[0] === 'array' && s[1] !== 'id' && supportedTypes.indexOf(s[1]) >= 0) {
+        // s[0] = 'array', s[1] 'type'
+        const memberType = s[1];
         try {
             value.forEach( v => {
                 if (!valid[memberType](v)) {
@@ -196,16 +196,17 @@ const checkField = (type, value) => {
  * Add a new entry to a table. The `_id` is created incrementally. (However, it could just as easily be a UUID by replacing `id` with a generated UUID)
  * @param {string} table - The name of the table to add to
  * @param {Object} entry - An object that conforms to the schema specified in the tables object
- * @param {function} cb - Callback function.
- * @returns {boolean} - The result of the insertion operation.
+ * @param {function} cb - Callback function. An error only if the check failed, or false first parameter and the newly created entry as the second.
+ * @returns {boolean} - The result of the insertion operation. A check error if the check failed, or false if not.
  */
 exports.insert = (table, entry, cb = () => {}) => {
     const schema = db.tables[table];
 
     for (let k in entry) {
         if (!checkField(schema[k].type, entry[k])) {
-            cb(false, {k: entry[k]});
-            return false;
+            const checkError = new Error(`Field Check failed for table ${table} key ${k} value ${entry[k]}`);
+            cb(checkError);
+            return checkError;
         } else {
             continue;
         }
@@ -220,8 +221,8 @@ exports.insert = (table, entry, cb = () => {}) => {
         save();
     }
 
-    cb(true, entry);
-    return true;
+    cb(false, db[table][id]);
+    return false;
 }
 
 /**
@@ -300,9 +301,10 @@ exports.getAll = (cb) => {
  */
 const save = () => {
     if (fs.existsSync(db.path)) {
-        fs.copyFileSync(db.path, path.join(db.path + '.backup'));
+        fs.copyFileSync(db.path, path.join(db.path + '.old'));
     }
-    return fs.writeFileSync(db.path, JSON.stringify(db), { encoding: 'utf8' });
+    const dbJSON = JSON.stringify(db);
+    return fs.writeFileSync(db.path, dbJSON, { encoding: 'utf8' });
 }
 
 /**

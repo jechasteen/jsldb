@@ -86,7 +86,7 @@ p('\nSet field by id: "people" change hometown to Trotwood');
 jsl.setFieldById('people', 1, 'hometown', 'Trotwood', printData);
 
 p('\nGet field by id: 0');
-jsl.getById('people', 0, printData);
+jsl.findById('people', 0, printData);
 
 p('\nDelete field (by id)');
 jsl.delete('people', 0, printData);
