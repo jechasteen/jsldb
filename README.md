@@ -1,6 +1,6 @@
 # JavaScript Local Database
 
-Store database information for a Node.js application in the local directory. JSLDB stores the databse as a JSON file, and responds with easy to use JS objects.
+JSLDB saves as a JSON file, but responds with easy to use JS objects from memory.
 
 ## Getting Started
 
@@ -12,7 +12,9 @@ Tables are defined in a manner similar to mongoose, where an object defines the 
 
 See [the tables docs](docs/tables.md)
 
-### Node.js
+To generate JSDOC documentation, clone the repo and then call `jsdoc index.html && firefox out/index.html`
+
+### Example
 
 ```javascript
 const express = require('express');

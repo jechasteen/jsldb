@@ -2,11 +2,10 @@ const jsl = require('./');
 const fs = require('fs');
 const path = require('path');
 
-function p (...str){
-    str.forEach( s => {
-        console.log(s);
-    });
-}
+// function p (...str){
+//     var w = 0
+//     str.forEach( s => { if (s) console.log(s); });
+// }
 
 const testTables = {
     people: {
@@ -24,12 +23,6 @@ const testTables = {
         birthdate: {
             type: 'date',
             required: true
-        },
-        siblings: {
-            type: 'array id people'
-        },
-        favColors: {
-            type: 'array id colors'
         }
     },
     colors: {
@@ -46,50 +39,76 @@ const testTables = {
 
 const printData = (res, data) => {
     if (res) {
-        p('Action successful\n', data);
+        console.log('Action successful\n', data);
     } else {
-        p('Failed: ', data);
+        console.log('Failed: ', data);
     }
 }
 
-p('Creating new database');
+console.log('Creating new database');
 if (jsl.create('db', testTables)) {
-    p('New DB successfully created');
+    console.log('New DB successfully created');
 } else {
-    p('New DB failed');
+    console.log('New DB failed');
 }
 
-p('\nInsert entry into "people"');
-jsl.insert('people', {
-    name: 'Jonathan',
-    age: 32,
-    hometown: 'Dayton',
-    birthdate: new Date('July 29 1986'),
-    siblings: [1],
-    favColors: []
-}, printData);
+console.log('\nInsert entry into "people"');
+try {
+    jsl.insert('people', {
+        name: 'Jonathan',
+        age: 32,
+        hometown: 'Dayton',
+        birthdate: new Date('July 29 1986'),
+    }, printData);
+} catch (e) {
+    console.log(e);
+}
 
-p('\nInsert entry into "people"');
-jsl.insert('people', {
-    name: 'James',
-    age: 30,
-    hometown: 'Xenia',
-    birthdate: new Date('March 3 1989'),
-    siblings: [0],
-    favColors: []
-}, printData);
+console.log('\nInsert entry into "people"');
+try {
+    jsl.insert('people', {
+        name: 'James',
+        age: 30,
+        hometown: 'Xenia',
+        birthdate: new Date('March 3 1989'),
+    }, printData);
+} catch (e) {
+    console.log(e);
+}
 
-p('\nGet the entire database object');
-jsl.getAll(printData);
+console.log('\nGet tables');
+let tables = jsl.tables();
+console.log(tables)
 
-p('\nSet field by id: "people" change hometown to Trotwood');
-jsl.setFieldById('people', 1, 'hometown', 'Trotwood', printData);
+console.log('\nSet field by id: "people" change hometown to Trotwood');
+let people = tables["people"];
 
-p('\nGet field by id: 0');
-jsl.findById('people', 0, printData);
+(function() {
+    for (var i in people) {
+        console.log(`set ${people[i]._id}`);
+        jsl.setFieldById('people', people[i]._id, 'hometown', 'Trotwood', printData);
+    }
+})();
 
-p('\nDelete field (by id)');
-jsl.delete('people', 0, printData);
+console.log('\nGet entry by id:');
+(function() {
+    for (var i in people) {
+        jsl.findById('people', people[i]._id, printData);
+    }
+})();
 
-p('\nFind using tableName: "valueToMatch"');
+
+console.log('\nDelete field (by id)');
+(function() {
+    for (var i in people) {
+        jsl.delete('people', people[i]._id, printData);
+    }
+})();
+
+console.log('\nGet tables');
+tables = jsl.tables();
+console.log(tables)
+
+console.log('\nFind using field value: ');
 jsl.find('people', { name: "James" }, printData);
+
