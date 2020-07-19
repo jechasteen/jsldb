@@ -2,10 +2,8 @@ const jsl = require('./');
 const fs = require('fs');
 const path = require('path');
 
-// function p (...str){
-//     var w = 0
-//     str.forEach( s => { if (s) console.log(s); });
-// }
+// TODO: We really need to make sure that it's clear what's passing and what's failing
+//       There should not only be markings (color?) but also a total at the end of the tests
 
 const testTables = {
     people: {
@@ -97,18 +95,32 @@ console.log('\nGet entry by id:');
     }
 })();
 
+console.log('\nSave db: ');
+jsl.saveSync();
+
+console.log('\nOpen database file: ');
+let jsl2 = require('./');
+jsl2.connect('db');
+people = jsl2.tables().people;
 
 console.log('\nDelete field (by id)');
 (function() {
     for (var i in people) {
-        jsl.delete('people', people[i]._id, printData);
+        console.log(`Delete ${people[i].name}.`);
+        jsl2.delete('people', people[i]._id, printData);
     }
 })();
 
 console.log('\nGet tables');
-tables = jsl.tables();
-console.log(tables)
+tables = jsl2.tables();
+console.log(tables);
 
-console.log('\nFind using field value: ');
-jsl.find('people', { name: "James" }, printData);
+console.log('\nFind using field value (should return undefined): ');
+jsl2.find('people', { name: "James" }, printData);
+
+console.log('\nRemoving temporary db.db.json file.');
+fs.unlink(jsl.path(), (err) => {
+    if (err) console.log(`\nError removing ${jsl.path()}: ${err}`);
+    else console.log(`\nSucessfully removed ${jsl.path()}`);
+});
 

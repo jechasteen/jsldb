@@ -28,5 +28,8 @@
   "homepage": "https://github.com/jechasteen/jsldb#readme",
   "devDependencies": {
     "faker": "^4.1.0"
+  },
+  "dependencies": {
+    "jsdoc-template": "github:braintree/jsdoc-template#master"
   }
 }

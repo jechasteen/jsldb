@@ -2,17 +2,15 @@
 
 JSLDB saves as a JSON file, but responds with easy to use JS objects from memory.
 
-## Getting Started
+*NOTE: This project is currently a work in progress and, as such, will be under heavy development. Use at your own risk before version 0.1.0*
 
-*NOTE: This project is currently a work in progress and, as such, will be under heavy development*
+## Getting Started
 
 ### Schema / Table Definition
 
 Tables are defined in a manner similar to mongoose, where an object defines the types of each field.
 
-See [the tables docs](docs/tables.md)
-
-To generate JSDOC documentation, clone the repo and then call `jsdoc index.html && firefox out/index.html`
+To generate and view documentation locally, clone the repo and then call `jsdoc index.html -c .jsdoc.json && firefox doc/index.html`
 
 ### Example
 

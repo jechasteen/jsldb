@@ -1,0 +1,14 @@
+{
+    "opts": {
+        "destination": "./doc/",
+        "readme": "README.md",
+        "template": "node_modules/jsdoc-template"
+    },
+    "templates": {
+        "referenceTitle": "jsldb",
+        "disableSort": false,
+        "collapse": true,
+        "resources": {
+        }
+    }
+}
