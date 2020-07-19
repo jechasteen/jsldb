@@ -6,6 +6,8 @@ JSLDB saves as a JSON file, but responds with easy to use JS objects from memory
 
 ## Getting Started
 
+see the [Documentation](https://jechasteen.github.io/jsldb)
+
 ### Schema / Table Definition
 
 Tables are defined in a manner similar to mongoose, where an object defines the types of each field.

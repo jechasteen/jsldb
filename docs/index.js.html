@@ -209,7 +209,7 @@ const verifyTables = (unverifiedTables, cb) => {
  * @param {string} name - The name of the new database
  * @param {Object} schema - A [tables]{@link docs/tables} schema object
  * @param {boolean} autosave - Whether to save automatically at creation and on changes, default false
- * @throws if the database given already exists, or if verify tables returns a check error.
+ * @throws if the database given already exists, or if table verification returns a check error.
  * @returns {boolean} - true if the database creation completed successfully. Undefined otherwise.
  */
 exports.create = (name, schema, autosave = false) => {
