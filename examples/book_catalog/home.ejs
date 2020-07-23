@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <title>Books - Home</title>
+
+    <script>
+        $('#new-book').on('shown.bs.modal', function () {
+            $('#myInput').trigger('focus')
+        });
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/">Book Catalog</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#add-book">
+                        +
+                    </button>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0" action="/search" method="GET">
+                <input name="q" class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="btn-search">Search</button>
+            </form>
+        </div>
+        </nav>
+    <!-- Button trigger modal -->
+    
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col"></th>
+                <th scope="col">Title</th>
+                <th scope="col">Author</th>
+                <th scope="col">publisher</th>
+                <th scope="col">ISBN</th>
+                <th scope="col"># Pages</th>
+            </tr>
+        </thead>
+        <tbody>
+        <% for (var id in books) { %>
+        <tr>
+            <th scope="row">
+                <form action="/delete/<%= id %>" method="post">
+                    <button type="submit" class="btn btn-danger">-</button>
+                </form>
+            </th>
+            <td><%= books[id].title %></td>
+            <td><%= books[id].author %></td>
+            <td><%= books[id].publisher %></td>
+            <td><%= books[id].isbn %></td>
+            <td><%= books[id].pages %></td>
+        </tr>
+        <% } %>
+    </table>
+
+    <!-- Modal -->
+    <div class="modal fade" id="add-book" tabindex="-1" role="dialog" aria-labelledby="add new book" aria-hidden="true">
+        <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            </div>
+            <form action="/new" method="post" class="form-group">
+                <div class="modal-body container-fluid">
+                    <label for="title">Title:
+                        <input type="text" name="title" id="title">
+                    </label>
+                    <label for="author">Author:
+                        <input type="text" name="author" id="author">
+                    </label>
+                    <label for="isbn">ISBN:
+                        <input type="text" name="isbn" id="isbn">
+                    </label>
+                    <label for="publisher">Publisher:
+                        <input type="text" name="publisher" id="publisher">
+                    </label>
+                    <label for="pages"># Pages
+                        <input type="number" name="pages" id="pages">
+                    </label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+        </div>
+    </div>
+    <!-- JS, Popper.js, and jQuery -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+<script>
+    document.querySelectorAll('.btn-delete').forEach( (btn) => {
+        btn.addEventListener('click', (e) => {
+            console.log(e.target.id);
+            let xhr = new XMLHttpRequest();
+            xhr.open('DELETE', `http://localhost:1337/id/${e.target.id}`);
+            xhr.onload = function () {
+                console.log(xhr.status);
+            }
+            xhr.send(null);
+        });
+    });
+    document.getElementById('btn-search').addEventListener('click', (e) => {
+
+    });
+</script>
+
+</body>
+</html>

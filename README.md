@@ -12,7 +12,7 @@ see the [Documentation](https://jechasteen.github.io/jsldb)
 
 Tables are defined in a manner similar to mongoose, where an object defines the types of each field.
 
-To generate and view documentation locally, clone the repo and then call `jsdoc index.html -c .jsdoc.json && firefox doc/index.html`
+To generate and view documentation locally, clone the repo and then call `jsdoc index.js -c .jsdoc.json && firefox doc/index.html`
 
 ### Example
 

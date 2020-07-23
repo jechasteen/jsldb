@@ -78,9 +78,11 @@
         Resources
       </h3>
       
+        <a href="https://en.wikipedia.org/wiki/Relational_database">Wikipedia</a>
+      
     
 
-    <h3>Modules</h3><ul><li id="relational-nav"><a href="module-relational.html">relational</a><ul class='methods'><li data-type="method" id="relational-connect-nav"><a href="module-relational.html#.connect">connect</a></li><li data-type="method" id="relational-create-nav"><a href="module-relational.html#.create">create</a></li><li data-type="method" id="relational-delete-nav"><a href="module-relational.html#.delete">delete</a></li><li data-type="method" id="relational-find-nav"><a href="module-relational.html#.find">find</a></li><li data-type="method" id="relational-findById-nav"><a href="module-relational.html#.findById">findById</a></li><li data-type="method" id="relational-insert-nav"><a href="module-relational.html#.insert">insert</a></li><li data-type="method" id="relational-save-nav"><a href="module-relational.html#.save">save</a></li><li data-type="method" id="relational-saveSync-nav"><a href="module-relational.html#.saveSync">saveSync</a></li><li data-type="method" id="relational-setFieldById-nav"><a href="module-relational.html#.setFieldById">setFieldById</a></li><li data-type="method" id="relational-tables-nav"><a href="module-relational.html#.tables">tables</a></li><li data-type="method" id="relational-findAll-nav"><a href="module-relational.html#~findAll">findAll</a></li><li data-type="method" id="relational-verifyTables-nav"><a href="module-relational.html#~verifyTables">verifyTables</a></li></ul></li></ul>
+    <h3>Modules</h3><ul><li id="relational-nav"><a href="module-relational.html">relational</a><ul class='methods'><li data-type="method" id="relational-deleteById-nav"><a href="module-relational.html#~deleteById">deleteById</a></li><li data-type="method" id="relational-find-nav"><a href="module-relational.html#~find">find</a></li><li data-type="method" id="relational-findAll-nav"><a href="module-relational.html#~findAll">findAll</a></li><li data-type="method" id="relational-findById-nav"><a href="module-relational.html#~findById">findById</a></li><li data-type="method" id="relational-getAllEntries-nav"><a href="module-relational.html#~getAllEntries">getAllEntries</a></li><li data-type="method" id="relational-insert-nav"><a href="module-relational.html#~insert">insert</a></li><li data-type="method" id="relational-save-nav"><a href="module-relational.html#~save">save</a></li><li data-type="method" id="relational-saveSync-nav"><a href="module-relational.html#~saveSync">saveSync</a></li><li data-type="method" id="relational-setFieldById-nav"><a href="module-relational.html#~setFieldById">setFieldById</a></li></ul></li></ul>
   </nav>
 
   <div id="main">
@@ -105,7 +107,7 @@
 <p>see the <a href="https://jechasteen.github.io/jsldb">Documentation</a></p>
 <h3>Schema / Table Definition</h3>
 <p>Tables are defined in a manner similar to mongoose, where an object defines the types of each field.</p>
-<p>To generate and view documentation locally, clone the repo and then call <code>jsdoc index.html -c .jsdoc.json &amp;&amp; firefox doc/index.html</code></p>
+<p>To generate and view documentation locally, clone the repo and then call <code>jsdoc index.js -c .jsdoc.json &amp;&amp; firefox doc/index.html</code></p>
 <h3>Example</h3>
 <pre class="prettyprint source lang-javascript"><code>const express = require('express');
 const app = express();
