@@ -104,17 +104,14 @@
 <p>JSLDB saves as a JSON file, but responds with easy to use JS objects from memory.</p>
 <p><em>NOTE: This project is currently a work in progress and, as such, will be under heavy development. Use at your own risk before version 0.1.0</em></p>
 <h2>Getting Started</h2>
-<p>see the <a href="https://jechasteen.github.io/jsldb">Documentation</a></p>
-<h3>Schema / Table Definition</h3>
-<p>Tables are defined in a manner similar to mongoose, where an object defines the types of each field.</p>
-<p>To generate and view documentation locally, clone the repo and then call <code>jsdoc index.js -c .jsdoc.json &amp;&amp; firefox doc/index.html</code></p>
+<p>To generate and view documentation locally, clone the repo and then call <code>jsdoc -c .jsdoc.json &amp;&amp; firefox docs/index.html</code></p>
 <h3>Example</h3>
-<pre class="prettyprint source lang-javascript"><code>const express = require('express');
-const app = express();
-const jsl = require('jsldb');
-const bodyParser = require('body-parser');
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+<pre class="prettyprint source lang-javascript"><code>const express = require('express')
+const app = express()
+const jsldb = require('jsldb')
+const bodyParser = require('body-parser')
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
 
 const tables = {
     table1: {
@@ -141,48 +138,40 @@ const tables = {
     }
 }
 
-// One or the other depending on circumstance {
-
-jsl.create('newdb', tables, true)
-
-// OR
-
-jsl.connect('newdb');
-
-// }
+const db = jsldb.relational('newdb', tables, { autosave: true })
 
 app.get('/table1/:id', (req, res) => {
-    jsl.getById('table1', req.params.id, (success, data) => {
+    db.getById('table1', req.params.id, (success, data) => {
         if (success) {
-            res.render('table1', data);
+            res.render('table1', data)
         } else {
-            res.redirect('/');
+            res.redirect('/')
         }
-    });
-});
+    })
+})
 
 app.post('/table1', (req, res) => {
     // Pass data from the browser to the server wrapped inside an object named entry attached to the request body
-    jsl.insert('table1', req.body.entry, (success, data) => {
+    db.insert('table1', req.body.entry, (success, data) => {
         if (success) {
-            res.redirect('/table1');
+            res.redirect('/table1')
         } else {
-            res.redirect('/');
-        }
-    });
-});
-
-app.delete('/table1/:id', (req, res) => {
-    jsl.delete('table1', req.params.id, (success, data) => {
-        if (success) {
-            res.redirect('/');
-        } else {
-            res.render('error');
+            res.redirect('/')
         }
     })
-});
+})
 
-app.listen(8080, '127.0.0.1');
+app.delete('/table1/:id', (req, res) => {
+    db.deleteById('table1', req.params.id, (success, data) => {
+        if (success) {
+            res.redirect('/')
+        } else {
+            res.render('error')
+        }
+    })
+})
+
+app.listen(8080, '127.0.0.1')
 </code></pre>
     </article>
   </section>
