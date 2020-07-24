@@ -68,7 +68,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
      * @param {any} value - The value to check the type of
      */
     function checkField (type, value) {
-        const valid = {
+        const validate = {
             number: (val) => {
                 return typeof val === 'number'
             },
@@ -88,19 +88,20 @@ module.exports = function (name, schema, options = { autosave: false }) {
 
         if (s.length === 1) {
             // Simple type
-            if (valid[type] && valid[type](value)) return true
+            if (validate[type] && validate[type](value)) return true
             else return false
         } else if (
             s[0] === 'array' &&
             s[1] !== 'id' &&
             supportedTypes.indexOf(s[1]) >= 0
         ) {
-            if (value.length === 0) return true
             // s[0] = 'array', s[1] 'type'
-            const memberType = s[1]
+            if (value.length === 0) return true
+            if (!value) return true
+            const type = s[1]
             try {
                 value.forEach((v) => {
-                    if (!valid[memberType](v)) {
+                    if (!validate[type](v)) {
                         return false
                     }
                 })
@@ -109,7 +110,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
                 return false
             }
         } else if (s[0] === 'array' && s[1] === 'id') {
-            // s[0] = 'array', s[1] = 'id', s[2] = 'table'
+            // s[0] = 'array', s[1] = 'id', s[2] = 'tableName'
             if (!db.tables[s[2]]) {
                 throw new Error(`Referenced table ${s[2]} does not exist.`)
             } else {
@@ -130,23 +131,23 @@ module.exports = function (name, schema, options = { autosave: false }) {
                 }
             }
         } else if (s[0] === 'id') {
+            if (!value) return true
             if (!db.tables[s[1]]) {
                 throw new Error(`Referenced table ${s[1]} does not exist.`)
-            } else {
-                if (db.tables[s[1]][value]) {
-                    return true
-                }
+            } else if (!db.tables[s[1]][value]) {
+                throw new Error(`Referenced entry ${s[1]}::${value} does not exist`)
+            } else if (db.tables[s[1]][value]) {
+                return true
             }
+            return false
         } else {
             return false
         }
     }
 
     /**
-     * Connect to an existing database. Function expects just the "name" of the database as an abbreviation of the
-     * filename name.db.json which this function will attempt to load.
+     * Load an existing database file
      * @private
-     * @param {string} name - The name of the database to be loaded
      * @throws if the database given does not exist
      */
     function connect () {
@@ -189,7 +190,6 @@ module.exports = function (name, schema, options = { autosave: false }) {
                     db.schemas = data
                     db.tables = {}
                     for (const key in data) {
-                        db.schemas[key].count = 0
                         db.tables[key] = {}
                     }
                 }
@@ -271,56 +271,6 @@ module.exports = function (name, schema, options = { autosave: false }) {
     }
 
     /**
-     * Find all items in a table with given field matching value.
-     * @instance
-     * @example
-     * let jonses = db.findAll('people', 'firstname', 'Jon');
-     * jonses.forEach( (jon) => {
-     *     console.log(`${jon.firstname} ${jon.lastname} is a jerk.`);
-     * });
-     * @param {string} table - The name of the table to be searched
-     * @param {field} field - The field to find
-     * @param {value} value - The value that must match
-     * @param {function} cb - Callback function, (error?, resultsObject?)
-     * @returns {Object} - All matching entries
-     */
-    function findAll (table, field, value, cb = () => {}) {
-        const ret = []
-        value = value.toLocaleLowerCase()
-        // iterate through all entries in a table
-        const entries = db.tables[table]
-        for (var id in entries) {
-            if (field === 'any') {
-                // iterate through the fields in an entry
-                for (var f in entries[id]) {
-                    let curField = entries[id][f]
-                    if (!curField) continue
-                    if (typeof curField === 'number') curField = curField.toString()
-                    if (curField instanceof Array) {
-                        // iterate through an array type value
-                        curField.forEach((item) => {
-                            if (item.toLocaleLowerCase().includes(value)) {
-                                ret.push(table[id])
-                            }
-                        })
-                    } else if (curField.toLocaleLowerCase().includes(value)) {
-                        console.log('match')
-                        ret.push(entries[id])
-                    }
-                }
-            } else if (entries[id][field].toLocaleLowerCase().includes(value)) {
-                ret.push(entries[id])
-            }
-        }
-        const resultsObject = {}
-        ret.forEach((entry) => {
-            resultsObject[entry._id] = entry
-        })
-        cb(null, resultsObject)
-        return resultsObject
-    }
-
-    /**
      * Fetch an entry by its id
      * @instance
      * @param {string} table - The table to be targeted
@@ -330,7 +280,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
      */
     function findById (table, id, cb = () => {}) {
         if (typeof cb !== 'function') { throw new Error('Callback parameter to findById does not have type function.') }
-        const found = db.tables[table][parseInt(id)]
+        const found = db.tables[table][id]
         if (found) {
             cb(null, found)
         } else {
@@ -365,8 +315,9 @@ module.exports = function (name, schema, options = { autosave: false }) {
         const schema = db.schemas[table]
 
         for (const k in entry) {
+            if (!schema[k]) cb(new Error(`Schema key ${k} has no type`))
             if (!checkField(schema[k].type, entry[k])) {
-                cb(new Error(`Field Check failed for table ${table}, key ${k} value ${entry[k]}`))
+                cb(new Error(`Field Check failed for table ${table}, key: ${k}, value: ${entry[k]}, type: ${schema[k].type}`))
             } else {
                 continue
             }
@@ -419,10 +370,8 @@ module.exports = function (name, schema, options = { autosave: false }) {
         const dbJSON = JSON.stringify(db)
         fs.writeFileSync(db.path, dbJSON, { encoding: 'utf8' })
         if ((db.fileExists = fs.existsSync(db.path))) {
-            console.log(`Successfully wrote ${db.path}`)
             return true
         } else {
-            console.log(`Failed to write ${db.path}`)
             return false
         }
     }
@@ -473,14 +422,15 @@ module.exports = function (name, schema, options = { autosave: false }) {
      */
     function verifyTables (inputTables, cb) {
         const tables = []
+        const tableNames = []
 
         for (const key in inputTables) {
             tables.push(inputTables[key])
+            tableNames.push(key);
         }
 
         tables.forEach((table) => {
             for (const key in table) {
-                // TODO: support tables having fields with either a simple type string, or an object with type/required keys
                 if (!table[key].type) {
                     throw Error(`Table attribute '${key}' has undefined type`)
                 }
@@ -496,7 +446,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
                 } else if (s.length === 2) {
                     // either "array ${type}" or "id ${table}"
                     if (s[0] === 'id') {
-                        if (tables.indexOf(s[1]) < 0) {
+                        if (tableNames.indexOf(s[1]) < 0) {
                             return cb(new Error(`Table ${s[1]} does not exist.`), null)
                         } else {
                             continue
@@ -512,7 +462,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
                     }
                 } else if (s.length === 3) {
                     // "array id ${table}"
-                    if (tables.indexOf(s[2]) < 0) {
+                    if (tableNames.indexOf(s[2]) < 0) {
                         cb(new Error(`Table ${s[2]} does not exist.`), null)
                     } else {
                         continue
@@ -524,9 +474,8 @@ module.exports = function (name, schema, options = { autosave: false }) {
     }
 
     return {
-        deleteById: deleteById,
+        deleteById: deleteById, 
         find: find,
-        findAll: findAll,
         findById: findById,
         getAllEntries: getAllEntries,
         insert: insert,
