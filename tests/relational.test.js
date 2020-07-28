@@ -1,10 +1,11 @@
 const fs = require('fs')
 const jsldb = require('../')
 const path = require('path')
+const { fail } = require('assert')
 
 const tPath = path.join(__dirname, '/test.db.json')
 
-const testSchema = {
+const passingSchema = {
     table1: {
         number: {
             type: 'number',
@@ -42,11 +43,39 @@ const testSchema = {
     }
 }
 
+const failingSchemas = {
+    badType: {
+        table: { field: { type: undefined } }
+    },
+    unsupportedType: {
+        table: { field: { type: 'float' } }
+    },
+    badTableLink: {
+        table: { field: { type: 'id table2' } }
+    },
+    badArrayType: {
+        table: { field: { type: 'array float' } }
+    },
+    badTableLinkArray: {
+        table: { field: { type: 'array id table2' } }
+    }
+}
+
 let db = undefined
 
 test('Create new database', () => {
-    db = jsldb.relational('test', testSchema, { autosave: true })
+    db = jsldb.relational('test', passingSchema, { autosave: true })
     expect(db).toBeTruthy()
+})
+
+test('Creation errors', () => {
+    for (bad in failingSchemas) {
+        try {
+            jsldb.relational('bad', failingSchemas[bad])
+        } catch (e) {
+            expect(e).toBeDefined
+        }
+    }
 })
 
 test('Save (sync)', () => {
@@ -54,7 +83,7 @@ test('Save (sync)', () => {
 })
 
 test('Connect to existing database', () => {
-    db = jsldb.relational('test', testSchema)
+    db = jsldb.relational('test', passingSchema)
     expect(db).toBeTruthy()
 })
 
@@ -175,13 +204,14 @@ test('Delete by id', (done) => {
             done()
         })
     })
-})
-
-test('Delete by id that doesnt exist', (done) => {
     db.deleteById('table1' ,'0', (err) => {
         expect(err).toBeDefined()
         done()
     })
+})
+
+test('Get database path', () => {
+    expect(db.path()).toEqual(tPath)
 })
 
 if (fs.existsSync(tPath))

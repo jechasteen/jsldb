@@ -181,7 +181,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
         } else {
             verifyTables(schema, (err, data) => {
                 if (err) {
-                    console.log(err)
+                    throw err
                 } else {
                     db.schemas = data
                     db.tables = {}
@@ -202,12 +202,13 @@ module.exports = function (name, schema, options = { autosave: false }) {
      * @param {callback} cb - A callback function (error?)
      */
     function deleteById (table, id, cb = () => {}) {
-        const result = delete db.tables[table][id]
-        if (result) {
+        if (Object.prototype.hasOwnProperty.call(db.tables[table], id)) {
+            delete db.tables[table][id]
             cb(null)
         } else {
-            cb(new Error(`Delete entry failed: ${table}:${id}`))
+            cb(new Error(`Table has no entry with id ${id}`))
         }
+
         if (db.autosave) {
             save()
         }
@@ -425,7 +426,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
         tables.forEach((table) => {
             for (const key in table) {
                 if (!table[key].type) {
-                    throw Error(`Table attribute '${key}' has undefined type`)
+                    cb(Error(`Table attribute '${key}' has undefined type`))
                 }
                 const s = table[key].type.split(' ')
                 const f = table[key]
