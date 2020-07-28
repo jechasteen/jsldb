@@ -19,7 +19,6 @@ module.exports = function (name, schema, options = { autosave: false }) {
     const supportedTypes = ['number', 'string', 'date']
     let db = {}
     db.autosave = options.autosave
-    db.fileExists = false
     db.path = undefined
     setPath()
     if (fs.existsSync(db.path)) {
@@ -172,9 +171,6 @@ module.exports = function (name, schema, options = { autosave: false }) {
      * Initialize a new database.
      * This should be done with a new require() call for each database to be created.
      * @private
-     * @param {string} name - The name of the new database
-     * @param {Object} schema - A [tables]{@link docs/tables} schema object
-     * @param {boolean} autosave - Whether to save automatically at creation and on changes, default false
      * @throws if the database given already exists, or if table verification returns a check error.
      * @returns {boolean} - true if the database creation completed successfully. Undefined otherwise.
      */
@@ -222,7 +218,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
      * @private
      */
     function duplicateFileIfExists () {
-        if (db.fileExists || fs.existsSync(db.path)) {
+        if (fs.existsSync(db.path)) {
             fs.copyFileSync(db.path, path.join(db.path + '.old'))
         }
     }
@@ -230,6 +226,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
     /**
      * Query a table using query object. Finds ALL matching entries
      * The currently supported query type is `fieldName: 'valueToMatch'`
+     * @tutorial queries
      * @instance
      * @example
      * let james = db.find('people', { name: "Jame" });
@@ -237,7 +234,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
      *     console.log(`${jame.firstname} ${jame.lastname} has a great head of hair.`);
      * });
      * @param {string} tableName - The name of the table to be queried
-     * @param {object} query - An object composed of the `field: value` pairs to be matched
+     * @param {object} query - An object composed of the `field: value` pairs to be matched. An empty object `{}` results in the whole table being returned.
      * @param {function} cb - Callback function (error?, resultsObject)
      */
     function find (tableName, query, cb) {
@@ -347,13 +344,11 @@ module.exports = function (name, schema, options = { autosave: false }) {
         const dbJSON = JSON.stringify(db)
         if (typeof cb === 'function') {
             fs.writeFile(db.path, dbJSON, { encoding: 'utf8' }, cb)
-            db.fileExists = fs.existsSync(db.path)
         } else {
             fs.writeFile(db.path, dbJSON, { encoding: 'utf8' }, (err) => {
                 if (err) throw new Error(`Failed to save ${db.path}: err`)
                 else {
                     console.log(`Sucessfully saved ${db.path}`)
-                    db.fileExists = fs.existsSync(db.path)
                 }
             })
         }
@@ -369,7 +364,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
 
         const dbJSON = JSON.stringify(db)
         fs.writeFileSync(db.path, dbJSON, { encoding: 'utf8' })
-        if ((db.fileExists = fs.existsSync(db.path))) {
+        if (fs.existsSync(db.path)) {
             return true
         } else {
             return false
