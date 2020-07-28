@@ -1,3 +1,4 @@
-*.db.json
-node_modules/*
+**/*.db.json*
+node_modules/**
 .vscode
+coverage/**
