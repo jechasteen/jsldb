@@ -45,7 +45,7 @@ const testSchema = {
 let db = undefined
 
 test('Create new database', () => {
-    db = jsldb.relational('test', testSchema)
+    db = jsldb.relational('test', testSchema, { autosave: true })
     expect(db).toBeTruthy()
 })
 
@@ -89,6 +89,11 @@ test('Insert a table2 entry', (done) => {
         expect(entry).toBe(t2Entry)
         done()
     })
+})
+
+test('Both tables should have size 1', () => {
+    expect(Object.size(db.getAllEntries('table1'))).toEqual(1)
+    expect(Object.size(db.getAllEntries('table2'))).toEqual(1)
 })
 
 // Tie the two together
@@ -147,6 +152,13 @@ test('Delete by id', (done) => {
             expect(db.tables().table2).toStrictEqual({})
             done()
         })
+    })
+})
+
+test('Delete by id that doesnt exist', (done) => {
+    db.deleteById('table1' ,'0', (err) => {
+        expect(err).toBeDefined()
+        done()
     })
 })
 
