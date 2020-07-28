@@ -1,7 +1,7 @@
 const fs = require('fs')
 const jsldb = require('../')
 const path = require('path')
-const { fail } = require('assert')
+const faker = require('faker')
 
 const tPath = path.join(__dirname, '/test.db.json')
 
@@ -212,6 +212,44 @@ test('Delete by id', (done) => {
 
 test('Get database path', () => {
     expect(db.path()).toEqual(tPath)
+})
+
+test('Faker', () => {
+    let fakeQuant = 10000
+    let fakeDB = jsldb.relational('fake', {
+        people: {
+            name: {
+                type: 'string',
+                required: true
+            },
+            title: {
+                type: 'string',
+                required: true
+            },
+            username: {
+                type: 'string',
+                required: true
+            },
+            phone: {
+                type: 'string',
+                required: true
+            }
+        }
+    })
+    for (var i = 0; i < fakeQuant; i++) {
+        let originalEntry = {
+            name: faker.fake('{{name.firstName}} {{name.lastName}}'),
+            title: faker.name.jobTitle(),
+            username: faker.internet.userName(),
+            phone: faker.phone.phoneNumber()
+        }
+        fakeDB.insert('people', originalEntry, (err, newEntry) => {
+            expect(err).toBeNull()
+            originalEntry._id = newEntry._id
+            expect(newEntry).toEqual(originalEntry);
+        })
+    }
+    expect(Object.size(fakeDB.getAllEntries('people'))).toEqual(fakeQuant)
 })
 
 if (fs.existsSync(tPath))
