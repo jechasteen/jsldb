@@ -4,6 +4,17 @@ const baseDir = path.dirname(require.main.filename)
 
 const { exec, execSync } = require('child_process')
 
+// Allows us to see if a find operation has any results
+if (!Object.size) {
+    Object.size = function (obj) {
+        var size = 0; var key
+        for (key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) size++
+        }
+        return size
+    }
+}
+
 /**
  * @module relational
  * @example
@@ -25,18 +36,6 @@ module.exports = function (name, schema, options = { autosave: false }) {
         connect(name)
     } else {
         create(name)
-    }
-
-    // Allows us to see if a find operation has any results
-    // Private to this database type so that we don't pollute the global
-    if (!Object.size) {
-        Object.size = function (obj) {
-            var size = 0; var key
-            for (key in obj) {
-                if (Object.prototype.hasOwnProperty.call(obj, key)) size++
-            }
-            return size
-        }
     }
 
     const uuidQueue = (function () {
@@ -79,11 +78,12 @@ module.exports = function (name, schema, options = { autosave: false }) {
             }
         }
 
+        if (!type || !value) {
+            return false
+        }
+
         const s = type.split(' ')
 
-        if (!type || !value) {
-            return false // we know by the point this function is called values must exist for both parameters
-        }
 
         if (s.length === 1) {
             // Simple type
@@ -209,7 +209,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
             cb(new Error(`Delete entry failed: ${table}:${id}`))
         }
         if (db.autosave) {
-            exports.save()
+            save()
         }
     }
 
@@ -325,7 +325,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
         db.tables[table][id]._id = id
 
         if (db.autosave) {
-            exports.save()
+            save()
         }
 
         cb(null, db.tables[table][id])
@@ -347,9 +347,6 @@ module.exports = function (name, schema, options = { autosave: false }) {
         } else {
             fs.writeFile(db.path, dbJSON, { encoding: 'utf8' }, (err) => {
                 if (err) throw new Error(`Failed to save ${db.path}: err`)
-                else {
-                    console.log(`Sucessfully saved ${db.path}`)
-                }
             })
         }
     }
@@ -399,7 +396,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
                 return false
             }
             if (db.autosave) {
-                exports.save()
+                save()
             }
             return true
         } else {
