@@ -72,6 +72,16 @@ let t2Entry = {
 }
 
 test('Insert a table1 entry', (done) => {
+    const brokenEntry = {
+        number: 'string',
+        string: 42,
+        date: 5
+    }
+    db.insert('table1', brokenEntry, (err, entry) => {
+        expect(err).toBeDefined()
+        expect(entry).toBeNull()
+        done()
+    })
     db.insert('table1', t1Entry, (err, entry) => {
         if (err) done(err)
         t1EntryId = entry._id
@@ -97,19 +107,27 @@ test('Both tables should have size 1', () => {
 })
 
 // Tie the two together
-test('Add id link (table1 -> table2)', (done) => {
+test('setFieldById', (done) => {
     db.setFieldById('table1', t1EntryId, 'idLink', t2EntryId, (err, entry) => {
         if (err) done(err)
         if (!entry) done('Entry came back undefined');
         expect(entry.idLink).toEqual(t2EntryId)
         done()
     })
-})
-test('Add id link (table2 -> table1)', (done) => {
     db.setFieldById('table2', t2EntryId, 'idLinkArray', [t1EntryId], (err, entry) => {
         if (err) done(err)
         expect(entry.idLinkArray).toEqual([t1EntryId])
         done()
+    })
+    // non-existent id
+    db.setFieldById('table1', 0, 'number', 12, (err, entry) => {
+        expect(err).toBeDefined()
+        expect(entry).toBeNull()
+    })
+    // make sure value matches field type
+    db.setFieldById('table1', t1EntryId, 'number', 'string', (err, entry) => {
+        expect(err).toBeDefined()
+        expect(entry).toBeNull()
     })
 })
 
@@ -140,6 +158,10 @@ test('Find by id', (done) => {
         if (err) done(err)
         expect(entry).toEqual(t1Entry)
         done()
+    })
+    db.findById('table1', '0', (err, entry) => {
+        expect(err).toBeDefined()
+        expect(entry).toEqual('0')
     })
 })
 

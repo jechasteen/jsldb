@@ -314,7 +314,8 @@ module.exports = function (name, schema, options = { autosave: false }) {
         for (const k in entry) {
             if (!schema[k]) cb(new Error(`Schema key ${k} has no type`))
             if (!checkField(schema[k].type, entry[k])) {
-                cb(new Error(`Field Check failed for table ${table}, key: ${k}, value: ${entry[k]}, type: ${schema[k].type}`))
+                cb(new Error(`Field Check failed for table ${table}, key: ${k}, value: ${entry[k]}, type: ${schema[k].type}`), null)
+                return
             } else {
                 continue
             }
