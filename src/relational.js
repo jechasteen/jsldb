@@ -38,6 +38,18 @@ module.exports = function (name, schema, options = { autosave: false }) {
         create(name)
     }
 
+    // Borrowed from faker sources because it's a fabulous method for javascript
+    // https://github.com/Marak/faker.js/blob/master/lib/random.js
+    const getUUID = function () {
+        var RFC4122_TEMPLATE = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
+        var replacePlaceholders = function (placeholder) {
+            var random = Math.round(Math.random() * 15);
+            var value = placeholder == 'x' ? random : (random &0x3 | 0x8);
+            return value.toString(16);
+        };
+        return RFC4122_TEMPLATE.replace(/[xy]/g, replacePlaceholders);
+    }
+
     const uuidQueue = (function () {
         const uuids = []
 
@@ -49,7 +61,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
         }
 
         // TODO: Maybe the generation quantity should be set via process.env?
-        for (var i = 0; i < 2; i++) { uuids.push(execSync('uuidgen', { encoding: 'utf8' }).replace('\n', '')) }
+        for (var i = 0; i < 16; i++) { uuids.push(execSync('uuidgen', { encoding: 'utf8' }).replace('\n', '')) }
 
         return {
             get: function () {
@@ -322,7 +334,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
             }
         }
 
-        const id = uuidQueue.get()
+        const id = getUUID()
         db.tables[table][id] = entry
         db.tables[table][id]._id = id
 
