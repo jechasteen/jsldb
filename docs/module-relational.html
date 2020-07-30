@@ -302,7 +302,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line216">line 216</a>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line193">line 193</a>
         </li>
       </ul>
     </dd>
@@ -341,7 +341,7 @@
       </svg>
     </a>
     <h4 class="name" id="~find">
-      <span class="type-signature">(inner) </span>find<span class="signature">(tableName, query, cb)</span><span class="type-signature"></span>
+      <span class="type-signature">(inner) </span>find<span class="signature">(table, query, options, cb)</span><span class="type-signature"></span>
     </h4>
   </span>
 
@@ -350,8 +350,9 @@
 
 
   <div class="description">
-    Query a table using query object. Finds ALL matching entries
-The currently supported query type is `fieldName: 'valueToMatch'`
+    Query a table using query object.
+This is a convenience function. You can call any of the other functions
+using options.queryType. If not specified, defaults to 'all' type search.
   </div>
 
 
@@ -384,7 +385,7 @@ The currently supported query type is `fieldName: 'valueToMatch'`
     
       <tr>
         
-          <td class="name"><code>tableName</code></td>
+          <td class="name"><code>table</code></td>
         
 
         <td class="type">
@@ -420,7 +421,7 @@ The currently supported query type is `fieldName: 'valueToMatch'`
           
             
     <span class="param-type">
-      object
+      Object
     </span>
 
     
@@ -435,6 +436,148 @@ The currently supported query type is `fieldName: 'valueToMatch'`
 
         <td class="description last">
           An object composed of the `field: value` pairs to be matched. An empty object `{}` results in the whole table being returned.
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>options</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      Object
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+
+        
+
+        <td class="description last">
+          Search options
+          
+            <h6>Properties</h6>
+            
+
+<table class="params">
+  <thead>
+    <tr>
+      
+        <th>Name</th>
+      
+
+      <th>Type</th>
+
+      
+
+      
+
+      <th class="last">Description</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    
+      <tr>
+        
+          <td class="name"><code>caseSensitive</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      boolean
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+
+        
+
+        <td class="description last">
+          True for case sensitive search, default false
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>n</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      number
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+
+        
+
+        <td class="description last">
+          Only for *N queries, the number of results to return
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>queryType</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+
+        
+
+        <td class="description last">
+          The type of query to perform. One of: id, anyN, anyOne, all, one, n, any.
+          
+        </td>
+      </tr>
+
+    
+  </tbody>
+</table>
+
           
         </td>
       </tr>
@@ -507,7 +650,7 @@ The currently supported query type is `fieldName: 'valueToMatch'`
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line253">line 253</a>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line254">line 254</a>
         </li>
       </ul>
     </dd>
@@ -542,23 +685,6 @@ The currently supported query type is `fieldName: 'valueToMatch'`
 
 
 
-
-  <div class="example-container">
-    <a class="link-icon" href="#find-examples">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
-    </a>
-    <h5 id="find-examples">Example</h5>
-    
-
-  <pre class="prettyprint"><code>let james = db.find('people', { name: "Jame" });
-james.forEach( (jame) => {
-    console.log(`${jame.firstname} ${jame.lastname} has a great head of hair.`);
-});</code></pre>
-
-
-  </div>
 
 
       
@@ -739,7 +865,7 @@ james.forEach( (jame) => {
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line291">line 291</a>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line316">line 316</a>
         </li>
       </ul>
     </dd>
@@ -885,7 +1011,7 @@ james.forEach( (jame) => {
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line308">line 308</a>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line333">line 333</a>
         </li>
       </ul>
     </dd>
@@ -1090,7 +1216,7 @@ The `_id` is a UUID and is created automatically.
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line324">line 324</a>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line349">line 349</a>
         </li>
       </ul>
     </dd>
@@ -1262,7 +1388,7 @@ The `_id` is a UUID and is created automatically.
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line355">line 355</a>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line383">line 383</a>
         </li>
       </ul>
     </dd>
@@ -1353,7 +1479,7 @@ The `_id` is a UUID and is created automatically.
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line373">line 373</a>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line401">line 401</a>
         </li>
       </ul>
     </dd>
@@ -1615,7 +1741,7 @@ The `_id` is a UUID and is created automatically.
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line403">line 403</a>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line431">line 431</a>
         </li>
       </ul>
     </dd>

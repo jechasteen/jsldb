@@ -103,8 +103,6 @@
 const path = require('path')
 const baseDir = path.dirname(require.main.filename)
 
-const { exec, execSync } = require('child_process')
-
 // Allows us to see if a find operation has any results
 if (!Object.size) {
     Object.size = function (obj) {
@@ -142,41 +140,21 @@ module.exports = function (name, schema, options = { autosave: false }) {
     // Borrowed from faker sources because it's a fabulous method for javascript
     // https://github.com/Marak/faker.js/blob/master/lib/random.js
     const getUUID = function () {
-        var RFC4122_TEMPLATE = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
+        var RFC4122_TEMPLATE = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
         var replacePlaceholders = function (placeholder) {
-            var random = Math.round(Math.random() * 15);
-            var value = placeholder == 'x' ? random : (random &amp;0x3 | 0x8);
-            return value.toString(16);
-        };
-        return RFC4122_TEMPLATE.replace(/[xy]/g, replacePlaceholders);
+            var random = Math.round(Math.random() * 15)
+            var value = placeholder === 'x' ? random : (random &amp; 0x3 | 0x8)
+            return value.toString(16)
+        }
+        return RFC4122_TEMPLATE.replace(/[xy]/g, replacePlaceholders)
     }
-
-    const uuidQueue = (function () {
-        const uuids = []
-
-        function handleOutput (err, stdout, stderr) {
-            if (err) {
-                console.log(err)
-            }
-            uuids.push(stdout.replace('\n', ''))
-        }
-
-        // TODO: Maybe the generation quantity should be set via process.env?
-        for (var i = 0; i &lt; 16; i++) { uuids.push(execSync('uuidgen', { encoding: 'utf8' }).replace('\n', '')) }
-
-        return {
-            get: function () {
-                exec('uuidgen', handleOutput)
-                return uuids.shift()
-            }
-        }
-    })()
 
     /**
      * Check the value against the given type
      * @private
      * @param {string} type - The type to be checked against
      * @param {any} value - The value to check the type of
+     * @return {boolean | Error} - True if check passed, false if it failed. Check for instancof Error with its output!
      */
     function checkField (type, value) {
         const validate = {
@@ -196,7 +174,6 @@ module.exports = function (name, schema, options = { autosave: false }) {
         }
 
         const s = type.split(' ')
-
 
         if (s.length === 1) {
             // Simple type
@@ -224,7 +201,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
         } else if (s[0] === 'array' &amp;&amp; s[1] === 'id') {
             // s[0] = 'array', s[1] = 'id', s[2] = 'tableName'
             if (!db.tables[s[2]]) {
-                throw new Error(`Referenced table ${s[2]} does not exist.`)
+                return new Error(`Referenced table ${s[2]} does not exist.`)
             } else {
                 if (value instanceof Array) {
                     value.forEach((v) => {
@@ -245,9 +222,9 @@ module.exports = function (name, schema, options = { autosave: false }) {
         } else if (s[0] === 'id') {
             if (!value) return true
             if (!db.tables[s[1]]) {
-                throw new Error(`Referenced table ${s[1]} does not exist.`)
+                return new Error(`Referenced table ${s[1]} does not exist.`)
             } else if (!db.tables[s[1]][value]) {
-                throw new Error(`Referenced entry ${s[1]}::${value} does not exist`)
+                return new Error(`Referenced entry ${s[1]}:${value} does not exist`)
             } else if (db.tables[s[1]][value]) {
                 return true
             }
@@ -337,48 +314,96 @@ module.exports = function (name, schema, options = { autosave: false }) {
         }
     }
 
+    function search (table, field, matchFn, search) {
+        const found = []
+        for (var key in table) {
+            const cur = table[key]
+            if (typeof search === 'string' ||
+                    typeof search === 'number') {
+                if ((matchFn === 'eq' &amp;&amp; cur[field] === search) ||
+                        (matchFn === 'gt' &amp;&amp; cur[field] > search) ||
+                        (matchFn === 'lt' &amp;&amp; cur[field] &lt; search) ||
+                        (matchFn === 'gte' &amp;&amp; cur[field] >= search) ||
+                        (matchFn === 'lte' &amp;&amp; cur[field] &lt;= search) ||
+                        (matchFn === 'contains' &amp;&amp; cur[field] instanceof Array &amp;&amp; cur[field].includes(search))) {
+                    found.push(key)
+                }
+            } else if (matchFn === 'regex' &amp;&amp;
+                    search instanceof RegExp &amp;&amp;
+                    typeof cur[field] === 'string' &amp;&amp;
+                    cur[field].match(search)) {
+                found.push(key)
+            }
+        }
+        return found
+    }
+
     /**
-     * Query a table using query object. Finds ALL matching entries
-     * The currently supported query type is `fieldName: 'valueToMatch'`
+     * Query a table using query object.
+     * This is a convenience function. You can call any of the other functions
+     * using options.queryType. If not specified, defaults to 'all' type search.
      * @tutorial queries
      * @instance
-     * @example
-     * let james = db.find('people', { name: "Jame" });
-     * james.forEach( (jame) => {
-     *     console.log(`${jame.firstname} ${jame.lastname} has a great head of hair.`);
-     * });
-     * @param {string} tableName - The name of the table to be queried
-     * @param {object} query - An object composed of the `field: value` pairs to be matched. An empty object `{}` results in the whole table being returned.
+     * @param {string} table - The name of the table to be queried
+     * @param {Object} query - An object composed of the `field: value` pairs to be matched. An empty object `{}` results in the whole table being returned.
+     * @param {Object} options - Search options
+     * @param {boolean} options.caseSensitive - True for case sensitive search, default false
+     * @param {number} options.n - Only for *N queries, the number of results to return
+     * @param {string} options.queryType - The type of query to perform. One of: id, anyN, anyOne, all, one, n, any.
      * @param {function} cb - Callback function (error?, resultsObject)
      */
-    function find (tableName, query, cb) {
-        if (query === {}) {
-            cb(db.tables[tableName])
+    function find (table, query, options, cb) {
+        if (typeof options === 'function') cb = options
+        if (!options || (options &amp;&amp; !options.queryType)) {
+            if (!options) options = {}
+            options.queryType = 'all'
         }
+        if (options.queryType === 'id' &amp;&amp; typeof query === 'string') {
+            return findById(table, query, cb)
+        } else if (options.queryType === 'all') {
+            return findAll(table, query, cb)
+        }
+    }
 
-        const fields = (() => {
-            const f = []
-            for (const key in db.schemas[tableName]) {
-                f.push(key)
+    function findAll (table, query, cb) {
+        let found = []
+        const t = db.tables[table]
+        for (const field in query) {
+            if (Object.keys(query[field]).length === 1) {
+                const matchType = Object.keys(query[field])[0]
+                found.push(search(t, field, matchType, query[field][matchType]))
             }
-            return f
-        })()
-
-        for (const key in query) {
-            if (fields.indexOf(key) > -1 || key === 'any') {
-                const results = findAll(tableName, key, query[key])
-                if (Object.size(results) > 0) {
-                    cb(null, results)
-                } else {
-                    cb(null, undefined)
+        }
+        const ret = {}
+        if (found.length === 1) {
+            found = found[0]
+            for (const i in found) {
+                const id = found[i]
+                ret[id] = db.tables[table][id]
+            }
+            cb(null, ret)
+            return ret
+        }
+        while (found.length > 1) {
+            let temp = []
+            for (var i = 0; i &lt; found[0].length; i++) {
+                for (var j = 0; j &lt; found[1].length; j++) {
+                    if (found[0][i] === found[1][j]) {
+                        temp.push(found[0][i])
+                    }
                 }
-            } else {
-                cb(
-                    new Error(`Query field (${key}) does not exist in ${tableName}`),
-                    null
-                )
+                found.shift()
+                found[1] = temp
+                temp = []
+            }
+            for (const id in temp) {
+                ret[id] = db.tables[table][id]
             }
         }
+        if (typeof cb === 'function') {
+            cb(null, ret)
+        }
+        return ret.size() > 0 ? ret : null
     }
 
     /**
@@ -426,10 +451,13 @@ module.exports = function (name, schema, options = { autosave: false }) {
         const schema = db.schemas[table]
 
         for (const k in entry) {
-            if (!schema[k]) cb(new Error(`Schema key ${k} has no type`))
-            if (!checkField(schema[k].type, entry[k])) {
-                cb(new Error(`Field Check failed for table ${table}, key: ${k}, value: ${entry[k]}, type: ${schema[k].type}`), null)
+            if (!schema[k]) cb(new Error(`Schema key ${k} has no type`), null)
+            const checkResult = checkField(schema[k].type, entry[k])
+            if (checkResult instanceof Error) {
+                cb(checkResult, null)
                 return
+            } else if (!checkResult) {
+                cb(new Error(`Type check failed: table ${table}, field ${schema[k]}, value ${entry[k]}`), null)
             } else {
                 continue
             }
@@ -533,7 +561,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
 
         for (const key in inputTables) {
             tables.push(inputTables[key])
-            tableNames.push(key);
+            tableNames.push(key)
         }
 
         tables.forEach((table) => {
@@ -581,9 +609,15 @@ module.exports = function (name, schema, options = { autosave: false }) {
     }
 
     return {
-        deleteById: deleteById, 
+        deleteById: deleteById,
         find: find,
         findById: findById,
+        findAll: findAll,
+        // findAny: findAny,
+        // findAnyN: findAnyN,
+        // findAnyOne: findAnyOne,
+        // findN: findN,
+        // findOne: findOne,
         getAllEntries: getAllEntries,
         insert: insert,
         path: function () { return db.path },

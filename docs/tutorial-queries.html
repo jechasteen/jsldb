@@ -102,8 +102,7 @@
   </header>
 
   <article>
-    <h1>jsldb queries</h1>
-<h2>Query Objects</h2>
+    <h2>Query Objects</h2>
 <pre class="prettyprint source lang-javascript"><code>db.find('tableName', {
     fieldName1: {
         // This is the Query Object, it contains RULES
@@ -118,11 +117,11 @@
     if (err)
 })
 </code></pre>
-<p>Each rule consists of a pair: the field name, and an object containing 1 (and only 1) match type.</p>
+<p>Each rule consists of a pair: the field name, and an object containing 1 (and only 1) match function.</p>
 <table>
 <thead>
 <tr>
-<th>Match Type</th>
+<th>Match Function</th>
 <th>Description</th>
 </tr>
 </thead>
@@ -178,26 +177,6 @@ Never {} or undefined.</p>
 <td>Alias for <code>findAll</code></td>
 </tr>
 <tr>
-<td>findOne</td>
-<td><code>AND</code></td>
-<td>Returns the first</td>
-</tr>
-<tr>
-<td>findN</td>
-<td><code>AND</code></td>
-<td>Returns the first N</td>
-</tr>
-<tr>
-<td>findAnyOne</td>
-<td><code>OR</code></td>
-<td>Returns the first</td>
-</tr>
-<tr>
-<td>findAnyN</td>
-<td><code>OR</code></td>
-<td>Returns the first N</td>
-</tr>
-<tr>
 <td>findAll</td>
 <td><code>AND</code></td>
 <td>Returns all</td>
@@ -207,8 +186,34 @@ Never {} or undefined.</p>
 <td><code>OR</code></td>
 <td>Returns all</td>
 </tr>
+<tr>
+<td>findAnyN</td>
+<td><code>OR</code></td>
+<td>Returns the first N</td>
+</tr>
+<tr>
+<td>findAnyOne</td>
+<td><code>OR</code></td>
+<td>Returns the first</td>
+</tr>
+<tr>
+<td>findById</td>
+<td>N/A</td>
+<td>Exception to the query rule, see below</td>
+</tr>
+<tr>
+<td>findN</td>
+<td><code>AND</code></td>
+<td>Returns the first N</td>
+</tr>
+<tr>
+<td>findOne</td>
+<td><code>AND</code></td>
+<td>Returns the first</td>
+</tr>
 </tbody>
 </table>
+<p>In the case of <code>findById</code>, instead of a query object you only need to pass a UUID that will match with a single entry.</p>
 <h2>Options</h2>
 <p>The last two</p>
 <table>
@@ -226,6 +231,12 @@ Never {} or undefined.</p>
 <td>boolean</td>
 <td>false</td>
 <td>whether or not to match case</td>
+</tr>
+<tr>
+<td>n</td>
+<td>number</td>
+<td>-1</td>
+<td>for <code>findN</code> and <code>findAnyN</code> queries only, how many items to find. -1 returns all. 0 returns null.</td>
 </tr>
 </tbody>
 </table>

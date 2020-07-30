@@ -1,5 +1,3 @@
-# jsldb queries
-
 ## Query Objects
 
 ```javascript
@@ -17,9 +15,9 @@ db.find('tableName', {
     if (err)
 })
 ```
-Each rule consists of a pair: the field name, and an object containing 1 (and only 1) match type.
+Each rule consists of a pair: the field name, and an object containing 1 (and only 1) match function.
 
-|Match Type|Description|
+|Match Function|Description|
 |----------|-----------|
 |eq|equal to|
 |gt|greater than|
@@ -41,12 +39,15 @@ Never {} or undefined.
 |name|logic|description|
 |-|-|-|
 |find|`AND`|Alias for `findAll`|
-|findOne|`AND`|Returns the first|
-|findN|`AND`|Returns the first N|
-|findAnyOne|`OR`|Returns the first|
-|findAnyN|`OR`|Returns the first N|
 |findAll|`AND`|Returns all|
 |findAny|`OR`|Returns all|
+|findAnyN|`OR`|Returns the first N|
+|findAnyOne|`OR`|Returns the first|
+|findById|N/A|Exception to the query rule, see below|
+|findN|`AND`|Returns the first N|
+|findOne|`AND`|Returns the first|
+
+In the case of `findById`, instead of a query object you only need to pass a UUID that will match with a single entry.
 
 ## Options
 

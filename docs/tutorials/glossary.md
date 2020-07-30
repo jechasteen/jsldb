@@ -1,5 +1,3 @@
-# Glossary
-
 ### Entry
 
 A single unit contained within a table. Must conform to the table's [schema](#schema)
@@ -13,7 +11,7 @@ The value it contains must conform to the type specified in the [schema](#schema
 
 A special object that defines the requirements for entries in a [table](#table).
 
-[Tutorial](schemas.md)
+[Tutorial](tutorial-schemas.html)
 
 ### Table
 
