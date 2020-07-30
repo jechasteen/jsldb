@@ -65,7 +65,7 @@ const tables = {
 const db = jsldb.relational('newdb', tables, { autosave: true })
 
 app.get('/table1/:id', (req, res) => {
-    db.getById('table1', req.params.id, (err, data) => {
+    db.findById('table1', req.params.id, (err, data) => {
         if (err) {
             res.render('error', { error: err })
         } else {
