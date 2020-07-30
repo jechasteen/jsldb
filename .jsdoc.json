@@ -4,6 +4,17 @@
         "readme": "README.md",
         "template": "node_modules/jsdoc-template"
     },
+    "source": {
+        "include": [
+            "index.js",
+            "src/relational.js"
+        ]
+    },
+    "sourceType": "module",
+    "tags": {
+        "allowUnknownTags": true,
+        "dictionaries": ["jsdoc", "closure"]
+    },
     "templates": {
         "referenceTitle": "jsldb",
         "disableSort": false,
@@ -11,16 +22,5 @@
         "resources": {
             "Wikipedia": "https://en.wikipedia.org/wiki/Relational_database"
         }
-    },
-    "tags": {
-        "allowUnknownTags": true,
-        "dictionaries": ["jsdoc", "closure"]
-    },
-    "sourceType": "module",
-    "source": {
-        "include": [
-            "index.js",
-            "src/relational.js"
-        ]
     }
 }
