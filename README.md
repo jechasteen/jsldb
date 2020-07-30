@@ -10,8 +10,6 @@ An in-memory database for Node with no dependencies, jsldb is type safe, fast, a
 
 ## Getting Started
 
-To generate and view documentation locally, clone the repo and then call `npm run docs && firefox docs/index.html`
-
 Have a look at the [docs](https://jechasteen.github.io/jsldb) for in-depth information about methods and a few tutorials.
 
 ### Basic principles
