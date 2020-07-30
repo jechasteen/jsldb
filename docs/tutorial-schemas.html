@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>
-      Tutorial: queries - Documentation
+      Tutorial: schemas - Documentation
   </title>
 
   <link href="https://www.braintreepayments.com/images/favicon-ccda0b14.png" rel="icon" type="image/png">
@@ -88,7 +88,7 @@
   <div id="main">
     
       <h1 class="page-title">
-        Tutorial: queries
+        Tutorial: schemas
       </h1>
     
 
@@ -97,156 +97,63 @@
     
 
     <h2>
-      queries
+      schemas
     </h2>
   </header>
 
   <article>
-    <h1>jsldb queries</h1>
-<h2>Query Objects</h2>
-<pre class="prettyprint source lang-javascript"><code>db.find('tableName', {
-    fieldName1: {
-        // This is the Query Object, it contains RULES
-        eq: 'John', // This is a rule
+    <h1>Table Object Definition (Schema)</h1>
+<p>When creating a new database, you must pass an object to the create function that sets the expectations for each table.
+A schema can contain multiple tables, or you could create a separate instance of JSLDB for each table.</p>
+<pre class="prettyprint source"><code>const tables = {
+    firstTable: {
+        firstField: {
+            type: 'type',
+            required: true
+        },
+        secondField: {
+            type: 'type',
+        },
+        ...
     },
-    fieldName2: {
-        gt: 42      // This is a rule too
+    secondTable: {
+        ...
     }
-}, {
-    caseSensitive: true // This is the options object
-}, (err, entries) => {
-    if (err)
-})
+}
 </code></pre>
-<p>Each rule consists of a pair: the field name, and an object containing 1 (and only 1) match type.</p>
-<table>
-<thead>
-<tr>
-<th>Match Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>eq</td>
-<td>equal to</td>
-</tr>
-<tr>
-<td>gt</td>
-<td>greater than</td>
-</tr>
-<tr>
-<td>lt</td>
-<td>less than</td>
-</tr>
-<tr>
-<td>gte</td>
-<td>greater than or equal to</td>
-</tr>
-<tr>
-<td>lte</td>
-<td>less than or equal to</td>
-</tr>
-<tr>
-<td>regex</td>
-<td>regular expression</td>
-</tr>
-<tr>
-<td>contains</td>
-<td>array contains</td>
-</tr>
-</tbody>
-</table>
-<h2>Query Functions</h2>
-<p>A query can be made with one rule or unlimited rules.
-Which query function you call determines the logic performed on the rules.</p>
-<p>Matching entries will be returned in the form of an object with each entry's id as the keys.
-If there are no entries, null will be returned.
-Never {} or undefined.</p>
-<table>
-<thead>
-<tr>
-<th>name</th>
-<th>logic</th>
-<th>description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>find</td>
-<td><code>AND</code></td>
-<td>Alias for <code>findAll</code></td>
-</tr>
-<tr>
-<td>findOne</td>
-<td><code>AND</code></td>
-<td>Returns the first</td>
-</tr>
-<tr>
-<td>findN</td>
-<td><code>AND</code></td>
-<td>Returns the first N</td>
-</tr>
-<tr>
-<td>findAnyOne</td>
-<td><code>OR</code></td>
-<td>Returns the first</td>
-</tr>
-<tr>
-<td>findAnyN</td>
-<td><code>OR</code></td>
-<td>Returns the first N</td>
-</tr>
-<tr>
-<td>findAll</td>
-<td><code>AND</code></td>
-<td>Returns all</td>
-</tr>
-<tr>
-<td>findAny</td>
-<td><code>OR</code></td>
-<td>Returns all</td>
-</tr>
-</tbody>
-</table>
-<h2>Options</h2>
-<p>The last two</p>
-<table>
-<thead>
-<tr>
-<th>name</th>
-<th>type</th>
-<th>default</th>
-<th>description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>caseSensitive</td>
-<td>boolean</td>
-<td>false</td>
-<td>whether or not to match case</td>
-</tr>
-</tbody>
-</table>
-<h2>Putting it all together</h2>
-<p>Let's say you have a table of employee info or something.
-You want to find all employees with the name Jeff that don't have an email.</p>
-<pre class="prettyprint source lang-javascript"><code>db.find('employees', {
-    name: {
-        eq: 'Jeff'
+<p>You can use this format to create an arbitrary number of tables, each with an arbitrary number of fields.
+Each field has 2 members: <code>type</code> and <code>required</code>. Ironically, the parameter <code>required</code> is optional, it defaults to false if not included. If a field is marked <code>required: true</code> and no value is passed upon insertion, an error will be thrown and the entry will be rejected.</p>
+<p>The basic types are 'number', 'string', 'date' which are used to check values when inserting a new entry.</p>
+<p>Each type can also be declared an array as: <code>'array *number*'</code></p>
+<p>An entry’s id be can be use as a reference to an entry in a neighboring table. To do so, use the form <code>'id *tablename*'</code>. You can also make an array of ids by using <code>'array id *tablename*'</code>. Doing so will check that the referenced table actually exists.</p>
+<pre class="prettyprint source lang-javascript"><code>const tables = {
+    people: {
+        name: {
+            type: 'string',
+            required: true
+        },
+        height: {
+            type: 'number'
+        },
+        birthdate: {
+            type: 'date',
+            required: true
+        },
+        favcolors: {
+            type: 'array id colors'
+        }
     },
-    email: {
-        eq: undefined
+    colors: {
+        name: {
+            type: 'string',
+            required: true
+        },
+        hex: {
+            type: 'string',
+            required: true
+        }
     }
-})
-</code></pre>
-<p>or maybe you want any employees with '@gmail.com' or '@live.com' email adresses</p>
-<pre class="prettyprint source lang-javascript"><code>db.findAny('employees', {
-    email: {
-        regex: /.+@((gmail)|(live)).com/g
-    }
-})
+}
 </code></pre>
   </article>
 </section>

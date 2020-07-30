@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>
-      Tutorial: queries - Documentation
+      Tutorial: glossary - Documentation
   </title>
 
   <link href="https://www.braintreepayments.com/images/favicon-ccda0b14.png" rel="icon" type="image/png">
@@ -88,7 +88,7 @@
   <div id="main">
     
       <h1 class="page-title">
-        Tutorial: queries
+        Tutorial: glossary
       </h1>
     
 
@@ -97,157 +97,26 @@
     
 
     <h2>
-      queries
+      glossary
     </h2>
   </header>
 
   <article>
-    <h1>jsldb queries</h1>
-<h2>Query Objects</h2>
-<pre class="prettyprint source lang-javascript"><code>db.find('tableName', {
-    fieldName1: {
-        // This is the Query Object, it contains RULES
-        eq: 'John', // This is a rule
-    },
-    fieldName2: {
-        gt: 42      // This is a rule too
-    }
-}, {
-    caseSensitive: true // This is the options object
-}, (err, entries) => {
-    if (err)
-})
-</code></pre>
-<p>Each rule consists of a pair: the field name, and an object containing 1 (and only 1) match type.</p>
-<table>
-<thead>
-<tr>
-<th>Match Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>eq</td>
-<td>equal to</td>
-</tr>
-<tr>
-<td>gt</td>
-<td>greater than</td>
-</tr>
-<tr>
-<td>lt</td>
-<td>less than</td>
-</tr>
-<tr>
-<td>gte</td>
-<td>greater than or equal to</td>
-</tr>
-<tr>
-<td>lte</td>
-<td>less than or equal to</td>
-</tr>
-<tr>
-<td>regex</td>
-<td>regular expression</td>
-</tr>
-<tr>
-<td>contains</td>
-<td>array contains</td>
-</tr>
-</tbody>
-</table>
-<h2>Query Functions</h2>
-<p>A query can be made with one rule or unlimited rules.
-Which query function you call determines the logic performed on the rules.</p>
-<p>Matching entries will be returned in the form of an object with each entry's id as the keys.
-If there are no entries, null will be returned.
-Never {} or undefined.</p>
-<table>
-<thead>
-<tr>
-<th>name</th>
-<th>logic</th>
-<th>description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>find</td>
-<td><code>AND</code></td>
-<td>Alias for <code>findAll</code></td>
-</tr>
-<tr>
-<td>findOne</td>
-<td><code>AND</code></td>
-<td>Returns the first</td>
-</tr>
-<tr>
-<td>findN</td>
-<td><code>AND</code></td>
-<td>Returns the first N</td>
-</tr>
-<tr>
-<td>findAnyOne</td>
-<td><code>OR</code></td>
-<td>Returns the first</td>
-</tr>
-<tr>
-<td>findAnyN</td>
-<td><code>OR</code></td>
-<td>Returns the first N</td>
-</tr>
-<tr>
-<td>findAll</td>
-<td><code>AND</code></td>
-<td>Returns all</td>
-</tr>
-<tr>
-<td>findAny</td>
-<td><code>OR</code></td>
-<td>Returns all</td>
-</tr>
-</tbody>
-</table>
-<h2>Options</h2>
-<p>The last two</p>
-<table>
-<thead>
-<tr>
-<th>name</th>
-<th>type</th>
-<th>default</th>
-<th>description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>caseSensitive</td>
-<td>boolean</td>
-<td>false</td>
-<td>whether or not to match case</td>
-</tr>
-</tbody>
-</table>
-<h2>Putting it all together</h2>
-<p>Let's say you have a table of employee info or something.
-You want to find all employees with the name Jeff that don't have an email.</p>
-<pre class="prettyprint source lang-javascript"><code>db.find('employees', {
-    name: {
-        eq: 'Jeff'
-    },
-    email: {
-        eq: undefined
-    }
-})
-</code></pre>
-<p>or maybe you want any employees with '@gmail.com' or '@live.com' email adresses</p>
-<pre class="prettyprint source lang-javascript"><code>db.findAny('employees', {
-    email: {
-        regex: /.+@((gmail)|(live)).com/g
-    }
-})
-</code></pre>
+    <h1>Glossary</h1>
+<h3>Entry</h3>
+<p>A single unit contained within a table. Must conform to the table's <a href="#schema">schema</a></p>
+<h3>Field</h3>
+<p>A data member contained within an <a href="#entry">entry</a>.
+The value it contains must conform to the type specified in the <a href="#schema">schema</a></p>
+<h3>Schema</h3>
+<p>A special object that defines the requirements for entries in a <a href="#table">table</a>.</p>
+<p><a href="schemas.md">Tutorial</a></p>
+<h3>Table</h3>
+<p>A named grouping of <a href="#entry">entries</a>.</p>
+<h3>Query</h3>
+<p>A find operation using one of the built-in <code>find*</code> methods</p>
+<h3>Query Object</h3>
+<p>An object containing the rule(s) that define what a matching entry should look like.</p>
   </article>
 </section>
 

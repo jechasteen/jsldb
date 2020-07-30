@@ -101,12 +101,22 @@
   <section class="readme">
     <article>
       <h1>JavaScript Local Database</h1>
-<p><a href="https://travis-ci.org/jechasteen/jsldb"><img src="https://travis-ci.org/jechasteen/jsldb.svg?branch=master" alt="Build Status"></a></p>
-<p><a href="https://coveralls.io/github/jechasteen/jsldb?branch=master"><img src="https://coveralls.io/repos/github/jechasteen/jsldb/badge.svg?branch=master" alt="Coverage Status"></a></p>
-<p>JSLDB saves as a JSON file, but responds with easy to use JS objects from memory.</p>
+<p><a href="https://travis-ci.org/jechasteen/jsldb"><img src="https://travis-ci.org/jechasteen/jsldb.svg?branch=master" alt="Build Status"></a> <a href="https://codecov.io/gh/jechasteen/jsldb"><img src="https://codecov.io/gh/jechasteen/jsldb/branch/master/graph/badge.svg" alt="codecov"></a></p>
+<p>jsldb saves as a JSON file, but responds with easy to use JS objects from memory.</p>
+<p>An in-memory database for Node with no dependencies, jsldb is type safe, fast, and easy to use.</p>
 <p><em>NOTE: This project is currently a work in progress and, as such, will be under heavy development. Use at your own risk before version 0.1.0</em></p>
 <h2>Getting Started</h2>
-<p>To generate and view documentation locally, clone the repo and then call <code>jsdoc -c .jsdoc.json &amp;&amp; firefox docs/index.html</code></p>
+<p>To generate and view documentation locally, clone the repo and then call <code>npm run docs &amp;&amp; firefox docs/index.html</code></p>
+<p>Have a look at the <a href="https://jechasteen.github.io/jsldb">Docs</a> for in-depth information about methods and a few tutorials.</p>
+<h3>Basic principles</h3>
+<p>jsldb offers a relational database that can contain any number of <code>tables</code>.
+A table is a named object that contains any number of <code>entries</code>, each of which is referenced by a UUID.
+Each of these entries must conform to a rigid <a href="docs/tutorials/schemas.md">schema</a> that ensures that the types conform.</p>
+<p>Upon insertion of a new entry, the entry is compared against the schema for type, and optionally to ensure that the <code>field</code> has a defined value.
+Accessing an entry directly via its id is a quick operation (see <a href="https://v8.dev/blog/fast-properties">this V8 devblog</a> for more info about property access optimization).</p>
+<p>A table can also be searched using one of several query functions.
+Each of these query functions take a <a href="docs/tutorials/queries.md">query object</a> that defines rules for matching entries.
+Queries return an object containing the entry or entries which match the given query object, with each entry's id as its key.</p>
 <h3>Example</h3>
 <pre class="prettyprint source lang-javascript"><code>const express = require('express')
 const app = express()

@@ -105,6 +105,17 @@ const baseDir = path.dirname(require.main.filename)
 
 const { exec, execSync } = require('child_process')
 
+// Allows us to see if a find operation has any results
+if (!Object.size) {
+    Object.size = function (obj) {
+        var size = 0; var key
+        for (key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) size++
+        }
+        return size
+    }
+}
+
 /**
  * @module relational
  * @example
@@ -128,16 +139,16 @@ module.exports = function (name, schema, options = { autosave: false }) {
         create(name)
     }
 
-    // Allows us to see if a find operation has any results
-    // Private to this database type so that we don't pollute the global
-    if (!Object.size) {
-        Object.size = function (obj) {
-            var size = 0; var key
-            for (key in obj) {
-                if (Object.prototype.hasOwnProperty.call(obj, key)) size++
-            }
-            return size
-        }
+    // Borrowed from faker sources because it's a fabulous method for javascript
+    // https://github.com/Marak/faker.js/blob/master/lib/random.js
+    const getUUID = function () {
+        var RFC4122_TEMPLATE = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
+        var replacePlaceholders = function (placeholder) {
+            var random = Math.round(Math.random() * 15);
+            var value = placeholder == 'x' ? random : (random &amp;0x3 | 0x8);
+            return value.toString(16);
+        };
+        return RFC4122_TEMPLATE.replace(/[xy]/g, replacePlaceholders);
     }
 
     const uuidQueue = (function () {
@@ -151,7 +162,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
         }
 
         // TODO: Maybe the generation quantity should be set via process.env?
-        for (var i = 0; i &lt; 2; i++) { uuids.push(execSync('uuidgen', { encoding: 'utf8' }).replace('\n', '')) }
+        for (var i = 0; i &lt; 16; i++) { uuids.push(execSync('uuidgen', { encoding: 'utf8' }).replace('\n', '')) }
 
         return {
             get: function () {
@@ -180,11 +191,12 @@ module.exports = function (name, schema, options = { autosave: false }) {
             }
         }
 
+        if (!type || !value) {
+            return false
+        }
+
         const s = type.split(' ')
 
-        if (!type || !value) {
-            return false // we know by the point this function is called values must exist for both parameters
-        }
 
         if (s.length === 1) {
             // Simple type
@@ -282,7 +294,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
         } else {
             verifyTables(schema, (err, data) => {
                 if (err) {
-                    console.log(err)
+                    throw err
                 } else {
                     db.schemas = data
                     db.tables = {}
@@ -303,14 +315,15 @@ module.exports = function (name, schema, options = { autosave: false }) {
      * @param {callback} cb - A callback function (error?)
      */
     function deleteById (table, id, cb = () => {}) {
-        const result = delete db.tables[table][id]
-        if (result) {
+        if (Object.prototype.hasOwnProperty.call(db.tables[table], id)) {
+            delete db.tables[table][id]
             cb(null)
         } else {
-            cb(new Error(`Delete entry failed: ${table}:${id}`))
+            cb(new Error(`Table has no entry with id ${id}`))
         }
+
         if (db.autosave) {
-            exports.save()
+            save()
         }
     }
 
@@ -415,18 +428,19 @@ module.exports = function (name, schema, options = { autosave: false }) {
         for (const k in entry) {
             if (!schema[k]) cb(new Error(`Schema key ${k} has no type`))
             if (!checkField(schema[k].type, entry[k])) {
-                cb(new Error(`Field Check failed for table ${table}, key: ${k}, value: ${entry[k]}, type: ${schema[k].type}`))
+                cb(new Error(`Field Check failed for table ${table}, key: ${k}, value: ${entry[k]}, type: ${schema[k].type}`), null)
+                return
             } else {
                 continue
             }
         }
 
-        const id = uuidQueue.get()
+        const id = getUUID()
         db.tables[table][id] = entry
         db.tables[table][id]._id = id
 
         if (db.autosave) {
-            exports.save()
+            save()
         }
 
         cb(null, db.tables[table][id])
@@ -448,9 +462,6 @@ module.exports = function (name, schema, options = { autosave: false }) {
         } else {
             fs.writeFile(db.path, dbJSON, { encoding: 'utf8' }, (err) => {
                 if (err) throw new Error(`Failed to save ${db.path}: err`)
-                else {
-                    console.log(`Sucessfully saved ${db.path}`)
-                }
             })
         }
     }
@@ -500,7 +511,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
                 return false
             }
             if (db.autosave) {
-                exports.save()
+                save()
             }
             return true
         } else {
@@ -528,7 +539,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
         tables.forEach((table) => {
             for (const key in table) {
                 if (!table[key].type) {
-                    throw Error(`Table attribute '${key}' has undefined type`)
+                    cb(Error(`Table attribute '${key}' has undefined type`))
                 }
                 const s = table[key].type.split(' ')
                 const f = table[key]

@@ -2,13 +2,32 @@
 
 [![Build Status](https://travis-ci.org/jechasteen/jsldb.svg?branch=master)](https://travis-ci.org/jechasteen/jsldb) [![codecov](https://codecov.io/gh/jechasteen/jsldb/branch/master/graph/badge.svg)](https://codecov.io/gh/jechasteen/jsldb)
 
-JSLDB saves as a JSON file, but responds with easy to use JS objects from memory.
+jsldb saves as a JSON file, but responds with easy to use JS objects from memory.
+
+An in-memory database for Node with no dependencies, jsldb is type safe, fast, and easy to use.
 
 *NOTE: This project is currently a work in progress and, as such, will be under heavy development. Use at your own risk before version 0.1.0*
 
 ## Getting Started
 
-To generate and view documentation locally, clone the repo and then call `jsdoc -c .jsdoc.json && firefox docs/index.html`
+To generate and view documentation locally, clone the repo and then call `npm run docs && firefox docs/index.html`
+
+Have a look at the [docs](https://jechasteen.github.io/jsldb) for in-depth information about methods and a few tutorials.
+
+### Basic principles
+
+See [glossary](https://jechasteen.github.io/jsldb/tutorial-glossary.html)
+
+jsldb offers a relational database that can contain any number of `tables`.
+A table is a named object that contains any number of `entries`, each of which is referenced by a UUID.
+Each of these entries must conform to a rigid [schema](https://jechasteen.github.io/jsldb/tutorial-schemas.md) that ensures that the types conform.
+
+Upon insertion of a new entry, the entry is compared against the schema for type, and optionally to ensure that the `field` has a defined value.
+Accessing an entry directly via its id is a quick operation (see [this V8 devblog](https://v8.dev/blog/fast-properties) for more info about property access optimization).
+
+A table can also be searched using one of several query functions.
+Each of these query functions take a [query object](https://jechasteen.github.io/jsldb/tutorial-queries.md) that defines rules for matching entries.
+Queries return an object containing the entry or entries which match the given query object, with each entry's id as its key.
 
 ### Example
 
