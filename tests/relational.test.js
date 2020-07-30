@@ -5,7 +5,7 @@ const faker = require('faker')
 
 const tPath = path.join(__dirname, '/test.db.json')
 
-const passingSchema = {
+const passingSchemas = {
     table1: {
         number: {
             type: 'number',
@@ -65,7 +65,7 @@ let db = undefined
 
 describe('Creation, saving, and connection', () => {
     test('Create new database', () => {
-        db = jsldb.relational('test', passingSchema, { autosave: true })
+        db = jsldb.relational('test', passingSchemas, { autosave: true })
         expect(db).toBeTruthy()
     })
     
@@ -84,17 +84,27 @@ describe('Creation, saving, and connection', () => {
     })
     
     test('Connect to existing database', () => {
-        db = jsldb.relational('test', passingSchema)
+        db = jsldb.relational('test', passingSchemas)
         expect(db).toBeTruthy()
     })
 })
 
+describe('Creation type check', () => {
+    
+})
+
 let t1EntryId = undefined
+let t1Entry2Id = undefined
 let t2EntryId = undefined
 let t1Entry = {
     number: 42,
     string: 'hello',
     date: new Date(),
+}
+let t1Entry2 = {
+    number: 105,
+    string: 'hellenic',
+    date: new Date()
 }
 let t2Entry = {
     numberArray: [1, 2],
@@ -104,16 +114,6 @@ let t2Entry = {
 
 describe('Entry insertion and modification', () => {    
     test('Insert a table1 entry', (done) => {
-        const brokenEntry = {
-            number: 'string',
-            string: 42,
-            date: 5
-        }
-        db.insert('table1', brokenEntry, (err, entry) => {
-            expect(err).toBeDefined()
-            expect(entry).toBeNull()
-            done()
-        })
         db.insert('table1', t1Entry, (err, entry) => {
             if (err) done(err)
             t1EntryId = entry._id
@@ -121,6 +121,76 @@ describe('Entry insertion and modification', () => {
             expect(entry).toBe(t1Entry)
             done()
         })
+    })
+
+    test('Insert a second table1 entry', (done) => {
+        db.insert('table1', t1Entry2, (err, entry) => {
+            if (err) done(err)
+            t1Entry2Id = entry._id
+            t1Entry2._id = entry._id
+            expect(entry).toBe(t1Entry2)
+            done()
+        })
+    })
+
+    describe('Entry type check', () => {
+        test('Insert a broken entry (number)', (done) => {
+            const entry = {
+                number: 'string',
+                string: 'string',
+                date: new Date(),
+                idLink: 'id table1'
+            }
+            db.insert('table1', entry, (err, entry) => {
+                expect(err).toBeDefined()
+                expect(entry).toBeNull()
+                done()
+            })
+        })
+    
+        test('Insert a broken entry (string)', (done) => {
+            const entry = {
+                number: 42,
+                string: 42,
+                date: new Date(),
+                idLink: 'id table1'
+            }
+            db.insert('table1', entry, (err, entry) => {
+                expect(err).toBeDefined()
+                expect(entry).toBeNull()
+                done()
+            })
+        })
+    
+        test('Insert a broken entry (date)', (done) => {
+            const entry = {
+                number: 42,
+                string: 'string',
+                date: 0,
+                idLink: 'id table1'
+            }
+            db.insert('table1', entry, (err, entry) => {
+                expect(err).toBeDefined()
+                expect(entry).toBeNull()
+                done()
+            })
+        })
+    
+        test('Insert broken entry (id)', (done) => {
+            const entry = {
+                number: 42,
+                string: 'string',
+                date: new Date(),
+                idLink: 'id table3'
+            }
+            db.insert('table1', entry, (err, entry) => {
+                expect(err).toBeDefined()
+                expect(entry).toBeNull()
+                done()
+            })
+        })
+    
+        // TODO: test failure of 'array id nonExistentTable'
     })
     
     test('Insert a table2 entry', (done) => {
@@ -134,32 +204,40 @@ describe('Entry insertion and modification', () => {
     })
     
     test('Both tables should have size 1', () => {
-        expect(Object.size(db.getAllEntries('table1'))).toEqual(1)
+        expect(Object.size(db.getAllEntries('table1'))).toEqual(2)
         expect(Object.size(db.getAllEntries('table2'))).toEqual(1)
     })
     
     // Tie the two together
-    test('setFieldById', (done) => {
+    test('setFieldById - link 1->2', (done) => {
         db.setFieldById('table1', t1EntryId, 'idLink', t2EntryId, (err, entry) => {
             if (err) done(err)
             if (!entry) done('Entry came back undefined');
             expect(entry.idLink).toEqual(t2EntryId)
             done()
         })
+    })
+
+    test('setFieldById - link 2->1', (done) => {
         db.setFieldById('table2', t2EntryId, 'idLinkArray', [t1EntryId], (err, entry) => {
             if (err) done(err)
             expect(entry.idLinkArray).toEqual([t1EntryId])
             done()
         })
-        // non-existent id
+    })
+
+    test('setFieldById - non-existent id', (done) => {
         db.setFieldById('table1', 0, 'number', 12, (err, entry) => {
             expect(err).toBeDefined()
             expect(entry).toBeNull()
+            done()
         })
-        // make sure value matches field type
+    })
+    test('setFieldById - ensure file type check', (done) => {
         db.setFieldById('table1', t1EntryId, 'number', 'string', (err, entry) => {
             expect(err).toBeDefined()
             expect(entry).toBeNull()
+            done()
         })
     })
     
@@ -193,28 +271,157 @@ describe('Get raw members', () => {
 })
 
 describe('Queries', () => {
-    test('Find by id', (done) => {
-        db.findById('table1', t1EntryId, (err, entry) => {
-            if (err) done(err)
-            expect(entry).toEqual(t1Entry)
-            done()
-        })
-        db.findById('table1', '0', (err, entry) => {
-            expect(err).toBeDefined()
-            expect(entry).toEqual('0')
-        })
-    })
-    
-    test('Delete by id', (done) => {
-        db.deleteById('table1', t1EntryId, (err) => {
-            if (err) done(err)
-            expect(db.tables().table1).toStrictEqual({})
-            db.deleteById('table2', t2EntryId, (err) => {
+    describe('findById', () => {
+        test('Find by id', (done) => {
+            db.findById('table1', t1EntryId, (err, entry) => {
                 if (err) done(err)
-                expect(db.tables().table2).toStrictEqual({})
+                expect(entry).toEqual(t1Entry)
                 done()
             })
         })
+    
+        test('Find by id (non-existent)', (done) => {
+            db.findById('table1', '0', (err, entry) => {
+                expect(err).toBeDefined()
+                expect(entry).toEqual('0')
+                done()
+            })
+        })
+    })
+
+    describe('findAll', () => {
+        test('findAll - eq: string', (done) => {
+            db.findAll('table1', { 
+                string: { 
+                    'eq': 'hello'
+                }
+            }, (err, entries) => {
+                if (err) done(err)
+                expect(entries[t1EntryId]).toEqual(t1Entry)
+                done()
+            })
+        })
+    
+        test('findAll - regex', (done) => {
+            db.findAll('table1', {
+                string: {
+                    'regex': /^hell/
+                }
+            }, (err, entries) => {
+                expect(err).toBe(null)
+                expect(entries[t1EntryId]).toEqual(t1Entry)
+                done()
+            })
+        })
+        
+        test('findAll - eq: number', (done) => {
+            db.findAll('table1', {
+                number: {
+                    'eq': 42
+                }
+            }, (err, entries) => {
+                if (err) done(err)
+                expect(entries[t1EntryId]).toEqual(t1Entry)
+                done()
+            })
+        })
+    
+        test('findAll - gt: number', (done) => {
+            db.findAll('table1', {
+                number: {
+                    'gt': 42
+                }
+            }, (err, entries) => {
+                if (err) done(err)
+                expect(entries[t1Entry2Id]).toEqual(t1Entry2)
+                done()
+            })
+        })
+
+        test('findAll - lt: number', (done) => {
+            db.findAll('table1', {
+                number: {
+                    'lt': 100
+                }
+            }, (err, entries) => {
+                if (err) done(err)
+                expect(entries[t1EntryId]).toEqual(t1Entry)
+                done()
+            })
+        })
+
+        test('findAll - gte: number', (done) => {
+            db.findAll('table1', {
+                number: {
+                    'gte': 42
+                }
+            }, (err, entries) => {
+                if (err) done(err)
+                expect(entries[t1EntryId]).toEqual(t1Entry)
+                expect(entries[t1Entry2Id]).toEqual(t1Entry2)
+                done()
+            })
+        })
+        
+        test('findAll - lte: number', (done) => {
+            db.findAll('table1', {
+                number: {
+                    'lte': 105
+                }
+            }, (err, entries) => {
+                if (err) done(err)
+                expect(entries[t1EntryId]).toEqual(t1Entry)
+                expect(entries[t1Entry2Id]).toEqual(t1Entry2)
+                done()
+            })
+        })
+
+        test('findAll - contains', (done) => {
+            db.findAll('table2', {
+                numberArray: {
+                    contains: 2
+                }
+            }, (err, entries) => {
+                if (err) done(err)
+                expect(entries[t2EntryId]).toEqual(t2Entry)
+                done()
+            })
+        })
+
+        test('findAll multiple rules - gt / lt', (done) => {
+            db.findAll('table1', {
+                number: {
+                    gt: 42
+                },
+                number: {
+                    lt: 106
+                }
+            }, (err, entries) => {
+                if (err) done(err)
+                expect(entries[t1Entry2Id]).toEqual(t1Entry2)
+                done()
+            })
+        })
+    })
+})
+
+describe('delete operations', () => {
+    test('Delete by id', (done) => {
+        db.deleteById('table1', t1EntryId, (err) => {
+            if (err) done(err)
+            db.deleteById('table1', t1Entry2Id, (err) => {
+                if (err) done(err)
+                expect(db.tables().table1).toStrictEqual({})
+                db.deleteById('table2', t2EntryId, (err) => {
+                    if (err) done(err)
+                    expect(db.tables().table2).toStrictEqual({})
+                    done()
+                })
+            })
+        })
+    })
+
+    test('Delete by id (non-existent)', (done) => {
         db.deleteById('table1' ,'0', (err) => {
             expect(err).toBeDefined()
             done()
@@ -224,7 +431,7 @@ describe('Queries', () => {
 
 describe('Faker', () => {
     test('Faker', () => {
-        let fakeQuant = 100
+        let fakeQuant = 1000
         let fakeDB = jsldb.relational('fake', {
             people: {
                 name: {
@@ -258,6 +465,7 @@ describe('Faker', () => {
                 expect(newEntry).toEqual(originalEntry);
             })
         }
+        db.save()
         expect(Object.size(fakeDB.getAllEntries('people'))).toEqual(fakeQuant)
     })
 })
