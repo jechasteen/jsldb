@@ -59,7 +59,7 @@ const tables = {
             required: true
         },
         field2: {
-            type: 'id field1'
+            type: 'id table1'
         }
     }
 }

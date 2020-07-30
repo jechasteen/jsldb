@@ -55,6 +55,7 @@ The last two
 |name|type|default|description|
 |-|-|-|-|
 |caseSensitive|boolean|false|whether or not to match case|
+|n|number|-1|for `findN` and `findAnyN` queries only, how many items to find. -1 returns all. 0 returns null.
 
 
 ## Putting it all together
