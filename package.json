@@ -22,7 +22,7 @@
     "local"
   ],
   "author": "Jonathan Chasteen <jonathan.chasteen@live.com>",
-  "license": "MIT",
+  "license": "GPLv3",
   "bugs": {
     "url": "https://github.com/jechasteen/jsldb/issues"
   },
@@ -36,7 +36,7 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
     "faker": "^4.1.0",
-    "jest": "^26.2.1",
+    "jest": "^26.2.2",
     "jsdoc-template": "github:braintree/jsdoc-template#master"
   },
   "dependencies": {}
