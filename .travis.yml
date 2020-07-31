@@ -1,7 +1,7 @@
 sudo: false
 language: node_js
 node_js:
-- lts/*
+- '14.5.0'
 branches:
   only:
   - master
