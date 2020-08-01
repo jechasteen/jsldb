@@ -29,7 +29,7 @@
   "homepage": "https://jechasteen.github.io/jsldb",
   "devDependencies": {
     "codecov": "^3.7.2",
-    "eslint": "^7.5.0",
+    "eslint": "^7.6.0",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-node": "^11.1.0",
@@ -37,7 +37,7 @@
     "eslint-plugin-standard": "^4.0.1",
     "faker": "^4.1.0",
     "jest": "^26.2.2",
-    "jsdoc-template": "github:braintree/jsdoc-template#master"k
+    "jsdoc-template": "github:braintree/jsdoc-template#master"
   },
   "dependencies": {}
 }
