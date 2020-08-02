@@ -11,5 +11,5 @@ before_install:
 install:
 - npm install
 script:
-- npm run test
+- npm test
 - node_modules/.bin/codecov

@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "jest",
+    "test": "node_modules/.bin/jest",
     "docs": "node_modules/.bin/jsdoc -c .jsdoc.json -u docs/tutorials/ --verbose"
   },
   "repository": {
