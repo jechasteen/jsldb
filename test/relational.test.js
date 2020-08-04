@@ -20,7 +20,7 @@ const passingSchemas = {
             required: true
         },
         idLink: {
-            type: 'id table2',
+            type: 'id table2'
         }
     },
     table2: {
@@ -61,28 +61,28 @@ const failingSchemas = {
     }
 }
 
-let db = undefined
+let db
 
 describe('Creation, saving, and connection', () => {
     test('Create new database', () => {
         db = jsldb.relational('test', passingSchemas, { autosave: true })
         expect(db).toBeTruthy()
     })
-    
+
     test('Creation errors', () => {
-        for (bad in failingSchemas) {
+        for (var bad in failingSchemas) {
             try {
                 jsldb.relational('bad', failingSchemas[bad])
             } catch (e) {
-                expect(e).toBeDefined
+                expect(e).toBeDefined()
             }
         }
     })
-    
+
     test('Save (sync)', () => {
         expect(db.saveSync()).toBe(true)
     })
-    
+
     test('Connect to existing database', () => {
         db = jsldb.relational('test', passingSchemas)
         expect(db).toBeTruthy()
@@ -90,29 +90,29 @@ describe('Creation, saving, and connection', () => {
 })
 
 describe('Creation type check', () => {
-    
+
 })
 
-let t1EntryId = undefined
-let t1Entry2Id = undefined
-let t2EntryId = undefined
-let t1Entry = {
+let t1EntryId
+let t1Entry2Id
+let t2EntryId
+const t1Entry = {
     number: 42,
     string: 'hello',
-    date: new Date(),
+    date: new Date()
 }
-let t1Entry2 = {
+const t1Entry2 = {
     number: 105,
     string: 'hellenic',
     date: new Date()
 }
-let t2Entry = {
+const t2Entry = {
     numberArray: [1, 2],
     stringArray: ['hello', 'world'],
-    dateArray: [new Date(), new Date()],
+    dateArray: [new Date(), new Date()]
 }
 
-describe('Entry insertion and modification', () => {    
+describe('Entry insertion and modification', () => {
     test('Insert a table1 entry', (done) => {
         db.insert('table1', t1Entry, (err, entry) => {
             if (err) done(err)
@@ -147,7 +147,7 @@ describe('Entry insertion and modification', () => {
                 done()
             })
         })
-    
+
         test('Insert a broken entry (string)', (done) => {
             const entry = {
                 number: 42,
@@ -161,7 +161,7 @@ describe('Entry insertion and modification', () => {
                 done()
             })
         })
-    
+
         test('Insert a broken entry (date)', (done) => {
             const entry = {
                 number: 42,
@@ -175,7 +175,7 @@ describe('Entry insertion and modification', () => {
                 done()
             })
         })
-    
+
         test('Insert broken entry (id)', (done) => {
             const entry = {
                 number: 42,
@@ -189,10 +189,10 @@ describe('Entry insertion and modification', () => {
                 done()
             })
         })
-    
+
         // TODO: test failure of 'array id nonExistentTable'
     })
-    
+
     test('Insert a table2 entry', (done) => {
         db.insert('table2', t2Entry, (err, entry) => {
             if (err) done(err)
@@ -202,17 +202,17 @@ describe('Entry insertion and modification', () => {
             done()
         })
     })
-    
+
     test('Both tables should have size 1', () => {
         expect(Object.size(db.getAllEntries('table1'))).toEqual(2)
         expect(Object.size(db.getAllEntries('table2'))).toEqual(1)
     })
-    
+
     // Tie the two together
     test('setFieldById - link 1->2', (done) => {
         db.setFieldById('table1', t1EntryId, 'idLink', t2EntryId, (err, entry) => {
             if (err) done(err)
-            if (!entry) done('Entry came back undefined');
+            if (!entry) done('Entry came back undefined')
             expect(entry.idLink).toEqual(t2EntryId)
             done()
         })
@@ -240,24 +240,24 @@ describe('Entry insertion and modification', () => {
             done()
         })
     })
-    
+
     test('Save (async)', (done) => {
-        db.save( (err) => {
+        db.save((err) => {
             if (err) done(err)
             expect(fs.existsSync(tPath)).toBe(true)
             done()
         })
-    })    
+    })
 })
 
 describe('Get raw members', () => {
     test('Get all tables', () => {
         expect(db.tables()).toHaveProperty('table1')
-        expect(db.tables()['table1'][t1EntryId]).toEqual(t1Entry)
+        expect(db.tables().table1[t1EntryId]).toEqual(t1Entry)
         expect(db.tables()).toHaveProperty('table2')
-        expect(db.tables()['table2'][t2EntryId]).toEqual(t2Entry)
-    });
-    
+        expect(db.tables().table2[t2EntryId]).toEqual(t2Entry)
+    })
+
     test('Get all entries in table1 and table2', () => {
         expect(db.getAllEntries('table1')).toHaveProperty(t1EntryId)
         expect(db.getAllEntries('table1')[t1EntryId]).toEqual(t1Entry)
@@ -279,7 +279,7 @@ describe('Queries', () => {
                 done()
             })
         })
-    
+
         test('Find by id (non-existent)', (done) => {
             db.findById('table1', '0', (err, entry) => {
                 expect(err).toBeDefined()
@@ -291,9 +291,9 @@ describe('Queries', () => {
 
     describe('findAll', () => {
         test('findAll - eq: string', (done) => {
-            db.findAll('table1', { 
-                string: { 
-                    'eq': 'hello'
+            db.findAll('table1', {
+                string: {
+                    eq: 'hello'
                 }
             }, (err, entries) => {
                 if (err) done(err)
@@ -301,11 +301,11 @@ describe('Queries', () => {
                 done()
             })
         })
-    
+
         test('findAll - regex', (done) => {
             db.findAll('table1', {
                 string: {
-                    'regex': /^hell/
+                    regex: /^hell/
                 }
             }, (err, entries) => {
                 expect(err).toBe(null)
@@ -313,11 +313,11 @@ describe('Queries', () => {
                 done()
             })
         })
-        
+
         test('findAll - eq: number', (done) => {
             db.findAll('table1', {
                 number: {
-                    'eq': 42
+                    eq: 42
                 }
             }, (err, entries) => {
                 if (err) done(err)
@@ -325,11 +325,11 @@ describe('Queries', () => {
                 done()
             })
         })
-    
+
         test('findAll - gt: number', (done) => {
             db.findAll('table1', {
                 number: {
-                    'gt': 42
+                    gt: 42
                 }
             }, (err, entries) => {
                 if (err) done(err)
@@ -341,7 +341,7 @@ describe('Queries', () => {
         test('findAll - lt: number', (done) => {
             db.findAll('table1', {
                 number: {
-                    'lt': 100
+                    lt: 100
                 }
             }, (err, entries) => {
                 if (err) done(err)
@@ -353,7 +353,7 @@ describe('Queries', () => {
         test('findAll - gte: number', (done) => {
             db.findAll('table1', {
                 number: {
-                    'gte': 42
+                    gte: 42
                 }
             }, (err, entries) => {
                 if (err) done(err)
@@ -362,11 +362,11 @@ describe('Queries', () => {
                 done()
             })
         })
-        
+
         test('findAll - lte: number', (done) => {
             db.findAll('table1', {
                 number: {
-                    'lte': 105
+                    lte: 105
                 }
             }, (err, entries) => {
                 if (err) done(err)
@@ -422,7 +422,7 @@ describe('delete operations', () => {
     })
 
     test('Delete by id (non-existent)', (done) => {
-        db.deleteById('table1' ,'0', (err) => {
+        db.deleteById('table1', '0', (err) => {
             expect(err).toBeDefined()
             done()
         })
@@ -431,8 +431,8 @@ describe('delete operations', () => {
 
 describe('Faker', () => {
     test('Faker', () => {
-        let fakeQuant = 1000
-        let fakeDB = jsldb.relational('fake', {
+        const fakeQuant = 1000
+        const fakeDB = jsldb.relational('fake', {
             people: {
                 name: {
                     type: 'string',
@@ -453,7 +453,7 @@ describe('Faker', () => {
             }
         })
         for (var i = 0; i < fakeQuant; i++) {
-            let originalEntry = {
+            const originalEntry = {
                 name: faker.fake('{{name.firstName}} {{name.lastName}}'),
                 title: faker.name.jobTitle(),
                 username: faker.internet.userName(),
@@ -462,7 +462,7 @@ describe('Faker', () => {
             fakeDB.insert('people', originalEntry, (err, newEntry) => {
                 expect(err).toBeNull()
                 originalEntry._id = newEntry._id
-                expect(newEntry).toEqual(originalEntry);
+                expect(newEntry).toEqual(originalEntry)
             })
         }
         db.save()
@@ -470,7 +470,5 @@ describe('Faker', () => {
     })
 })
 
-if (fs.existsSync(tPath))
-    fs.unlinkSync(tPath)
-if (fs.existsSync(`${tPath}.old`))
-    fs.unlinkSync(`${tPath}.old`)
+if (fs.existsSync(tPath)) { fs.unlinkSync(tPath) }
+if (fs.existsSync(`${tPath}.old`)) { fs.unlinkSync(`${tPath}.old`) }
