@@ -3,6 +3,8 @@ const jsldb = require('../')
 const path = require('path')
 const faker = require('faker')
 
+const { describe, test, expect } = require('jest')
+
 const tPath = path.join(__dirname, '/test.db.json')
 
 const passingSchemas = {
@@ -87,10 +89,6 @@ describe('Creation, saving, and connection', () => {
         db = jsldb.relational('test', passingSchemas)
         expect(db).toBeTruthy()
     })
-})
-
-describe('Creation type check', () => {
-
 })
 
 let t1EntryId
