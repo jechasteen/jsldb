@@ -3,7 +3,7 @@ const jsldb = require('../')
 const path = require('path')
 const faker = require('faker')
 
-const { describe, test, expect } = require('jest')
+// const { describe, test, expect } = require('jest')
 
 const tPath = path.join(__dirname, '/test.db.json')
 
