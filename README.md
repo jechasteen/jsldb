@@ -18,13 +18,13 @@ See [glossary](https://jechasteen.github.io/jsldb/tutorial-glossary.html)
 
 jsldb offers a relational database that can contain any number of `tables`.
 A table is a named object that contains any number of `entries`, each of which is referenced by a UUID.
-Each of these entries must conform to a rigid [schema](https://jechasteen.github.io/jsldb/tutorial-schemas.md) that ensures that the types conform.
+Each of these entries must conform to a rigid [schema](https://jechasteen.github.io/jsldb/tutorial-schemas.html) that ensures that the types conform.
 
 Upon insertion of a new entry, the entry is compared against the schema for type, and optionally to ensure that the `field` has a defined value.
 Accessing an entry directly via its id is a quick operation (see [this V8 devblog](https://v8.dev/blog/fast-properties) for more info about property access optimization).
 
 A table can also be searched using one of several query functions.
-Each of these query functions take a [query object](https://jechasteen.github.io/jsldb/tutorial-queries.md) that defines rules for matching entries.
+Each of these query functions take a [query object](https://jechasteen.github.io/jsldb/tutorial-queries.html) that defines rules for matching entries.
 Queries return an object containing the entry or entries which match the given query object, with each entry's id as its key.
 
 ### Example
