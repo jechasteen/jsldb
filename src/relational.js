@@ -203,10 +203,6 @@ module.exports = function (name, schema, options = { autosave: false }) {
         }
     }
 
-    /**
-     * If the JSON file already exists, make a backup
-     * @private
-     */
     function duplicateFileIfExists () {
         if (fs.existsSync(db.path)) {
             fs.copyFileSync(db.path, path.join(db.path + '.old'))
@@ -244,7 +240,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
      * @tutorial queries
      * @instance
      * @param {string} table - The name of the table to be queried
-     * @param {Object} query - An object composed of the `field: value` pairs to be matched. An empty object `{}` results in the whole table being returned.
+     * @param {Object} query - An array composed of objects with `key: value` pairs to be matched. An empty object `{}` results in the whole table being returned.
      * @param {Object} options - Search options
      * @param {boolean} options.caseSensitive - True for case sensitive search, default false
      * @param {number} options.n - Only for *N queries, the number of results to return

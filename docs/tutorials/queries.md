@@ -1,15 +1,10 @@
 ## Query Objects
 
 ```javascript
-db.find('tableName', {
-    fieldName1: {
-        // This is the Query Object, it contains RULES
-        eq: 'John', // This is a rule
-    },
-    fieldName2: {
-        gt: 42      // This is a rule too
-    }
-}, {
+db.find('tableName', [
+    Query('fieldname1', 'eq', 'John'),
+    Query('fieldname2', 'gt', 42)
+], {
     caseSensitive: true // This is the options object
 }, (err, entries) => {
     if (err)
@@ -30,8 +25,8 @@ Each rule consists of a pair: the field name, and an object containing 1 (and on
 ## Query Functions
 
 A query can be made with one rule or unlimited rules.
-Which query function you call determines the logic performed on the rules.
 
+Which query function you call determines the logic performed on the rules.
 Matching entries will be returned in the form of an object with each entry's id as the keys.
 If there are no entries, null will be returned.
 Never {} or undefined.
