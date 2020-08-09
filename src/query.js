@@ -7,6 +7,9 @@
  * @param {*} val The value to use in the search function
  */
 function Query (table, field, fn, val) {
+    if (!table || !field || !fn || !val) {
+        throw new Error('new Query: all arguments are required')
+    }
     this.table = table
     this.field = field
     this.fn = fn

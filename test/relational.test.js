@@ -6,7 +6,6 @@ const faker = require('faker')
 
 const tPath = path.join(__dirname, 'test.db.json')
 
-
 const passingSchemas = {
     table1: {
         number: {
