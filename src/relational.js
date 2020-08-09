@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const baseDir = path.dirname(require.main.filename)
+const Query = require('./query')
 
 // Allows us to see if a find operation has any results
 if (!Object.size) {
@@ -247,7 +248,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
      * @param {string} options.queryType - The type of query to perform. One of: id, anyN, anyOne, all, one, n, any.
      * @param {function} cb - Callback function (error?, resultsObject)
      */
-    function find (table, query, options, cb) {
+    function find (query, options, cb) {
         if (typeof options === 'function') cb = options
         if (!options || (options && !options.queryType)) {
             if (!options) options = {}
@@ -260,43 +261,61 @@ module.exports = function (name, schema, options = { autosave: false }) {
         }
     }
 
-    function findAll (table, query, cb) {
+    function findAll (query, cb) {
+        if (query instanceof Array) {
+            debugger;
+        }
         let found = []
-        const t = db.tables[table]
-        for (const field in query) {
-            if (Object.keys(query[field]).length === 1) {
-                const matchType = Object.keys(query[field])[0]
-                found.push(search(t, field, matchType, query[field][matchType]))
+        if (query instanceof Query) {
+            found.push(search(db.tables[query.table], query.field, query.fn, query.val))
+        } else if (query instanceof Array) {
+            for (var q in query) {
+                if (!query[q] || !(query[q] instanceof Query)) cb(new Error('Queries must be instances of the Query object.'))
+                found.push(search(db.tables[query[q].table], query[q].field, query[q].fn, query[q].val))
+            }
+        } else {
+            cb(new Error('Query was neither an array of Query objects, nor a Query object.'), null)
+        }
+
+        for (var i in found) {
+            if (found[i].length === 0) {
+                found.splice[i, 1]
             }
         }
+        if (found.length === 0) {
+            cb(null, null)
+            return null
+        }
+
         const ret = {}
         if (found.length === 1) {
             found = found[0]
             for (const i in found) {
                 const id = found[i]
-                ret[id] = db.tables[table][id]
+                ret[id] = db.tables[query.table][id]
             }
             cb(null, ret)
             return ret
-        }
-        while (found.length > 1) {
-            let temp = []
-            for (var i = 0; i < found[0].length; i++) {
-                for (var j = 0; j < found[1].length; j++) {
-                    if (found[0][i] === found[1][j]) {
-                        temp.push(found[0][i])
+        } else if (found.length > 1) {
+            let same = [];
+            while (found.length > 1) {
+                for (var i in found[0]) {
+                    for (var j in found[1]) {
+                        if (found[0][i] === found[1][j]) {
+                            same.push(found[0][i])
+                        }
                     }
                 }
                 found.shift()
-                found[1] = temp
-                temp = []
+                found[0] = same
             }
-            for (const id in temp) {
-                ret[id] = db.tables[table][id]
+            for (var i in same) {
+                ret[same[i]] = db.tables[query[0].table][same[i]]
             }
-        }
-        if (typeof cb === 'function') {
             cb(null, ret)
+            return ret
+        } else {
+            return(null, null)
         }
         return ret.size() > 0 ? ret : null
     }
@@ -372,8 +391,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
 
     /**
      * Asynchronously write the database object in memory to file
-     * @instance
-     * @async
+     * @instance @async
      * @param {function} cb An optional callback with one parameter (error?) that runs after the write operation.
      */
     function save (cb) {
