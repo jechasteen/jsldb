@@ -1,7 +1,7 @@
 {
     "opts": {
         "destination": "./docs/",
-        "readme": "README.md",
+        "readme": "docs/intro.md",
         "template": "node_modules/jsdoc-template"
     },
     "source": {
