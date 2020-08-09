@@ -103,20 +103,22 @@
 
   <article>
     <h2>Query Objects</h2>
-<pre class="prettyprint source lang-javascript"><code>db.find('tableName', [
-    Query('fieldname1', 'eq', 'John'),
-    Query('fieldname2', 'gt', 42)
+<pre class="prettyprint source lang-javascript"><code>db.find([
+    new Query('tablename', 'fieldname1', 'eq', 'John'),
+    new Query('tablename' 'fieldname2', 'gt', 42)
 ], {
-    caseSensitive: true // This is the options object
+    caseSensitive: true
 }, (err, entries) => {
     if (err)
 })
 </code></pre>
-<p>Each rule consists of a pair: the field name, and an object containing 1 (and only 1) match function.</p>
+<p>Each Query object specifies the table to be searched, the field to be matched, the comparison function used match, and the value to compare against.</p>
+<p>Note: you must instantiate a Query with <code>new</code>!</p>
+<h2>Match Types</h2>
 <table>
 <thead>
 <tr>
-<th>Match Function</th>
+<th>Function</th>
 <th>Description</th>
 </tr>
 </thead>
@@ -151,7 +153,7 @@
 </tr>
 </tbody>
 </table>
-<h2>Query Functions</h2>
+<h2>Query Methods</h2>
 <p>A query can be made with one rule or unlimited rules.</p>
 <p>Which query function you call determines the logic performed on the rules.
 Matching entries will be returned in the form of an object with each entry's id as the keys.
@@ -210,7 +212,8 @@ Never {} or undefined.</p>
 </table>
 <p>In the case of <code>findById</code>, instead of a query object you only need to pass a UUID that will match with a single entry.</p>
 <h2>Options</h2>
-<p>The last two</p>
+<p>In order to provide more flexibility, the <code>find()</code> method allows an options object to customize the search. This allows you to either hard code the query function, or to determine it at run time.</p>
+<p>Note: some of these options are supported only for specified query functions. If an unsupported option is passed, the search will continue as if it had not been.</p>
 <table>
 <thead>
 <tr>
@@ -233,26 +236,33 @@ Never {} or undefined.</p>
 <td>-1</td>
 <td>for <code>findN</code> and <code>findAnyN</code> queries only, how many items to find. -1 returns all. 0 returns null.</td>
 </tr>
+<tr>
+<td>queryFunction</td>
+<td>string</td>
+<td>'all'</td>
+<td>selects the query function to call. the string is the function name, all lowercase, dropping 'find', e.g. 'byid' or 'anyone'</td>
+</tr>
 </tbody>
 </table>
 <h2>Putting it all together</h2>
 <p>Let's say you have a table of employee info or something.
 You want to find all employees with the name Jeff that don't have an email.</p>
-<pre class="prettyprint source lang-javascript"><code>db.find('employees', {
-    name: {
-        eq: 'Jeff'
-    },
-    email: {
-        eq: undefined
+<pre class="prettyprint source lang-javascript"><code>db.findAll(
+    new Query('employees', 'name', 'eq', 'Jeff'),
+    (err, entries) => {
+        if (err) console.log(err)
+        res.render('page', { employeesNamedJeff: entries })
     }
-})
+)
 </code></pre>
 <p>or maybe you want any employees with '@gmail.com' or '@live.com' email adresses</p>
-<pre class="prettyprint source lang-javascript"><code>db.findAny('employees', {
-    email: {
-        regex: /.+@((gmail)|(live)).com/g
+<pre class="prettyprint source lang-javascript"><code>db.findAny(
+    new Query('employees', 'email', 'regex', RegExp(/.+@((gmail)|(live)).com/g)),
+    (err, entries) => {
+        if (err) console.log(err)
     }
-})
+    res.render('page', { emails: entries })
+)
 </code></pre>
   </article>
 </section>

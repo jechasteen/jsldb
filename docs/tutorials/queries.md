@@ -1,18 +1,22 @@
 ## Query Objects
 
 ```javascript
-db.find('tableName', [
-    Query('fieldname1', 'eq', 'John'),
-    Query('fieldname2', 'gt', 42)
+db.find([
+    new Query('tablename', 'fieldname1', 'eq', 'John'),
+    new Query('tablename' 'fieldname2', 'gt', 42)
 ], {
-    caseSensitive: true // This is the options object
+    caseSensitive: true
 }, (err, entries) => {
     if (err)
 })
 ```
-Each rule consists of a pair: the field name, and an object containing 1 (and only 1) match function.
+Each Query object specifies the table to be searched, the field to be matched, the comparison function used match, and the value to compare against.
 
-|Match Function|Description|
+Note: you must instantiate a Query with `new`!
+
+## Match Types
+
+|Function|Description|
 |----------|-----------|
 |eq|equal to|
 |gt|greater than|
@@ -22,7 +26,7 @@ Each rule consists of a pair: the field name, and an object containing 1 (and on
 |regex|regular expression|
 |contains|array contains|
 
-## Query Functions
+## Query Methods
 
 A query can be made with one rule or unlimited rules.
 
@@ -46,12 +50,15 @@ In the case of `findById`, instead of a query object you only need to pass a UUI
 
 ## Options
 
-The last two 
+In order to provide more flexibility, the `find()` method allows an options object to customize the search. This allows you to either hard code the query function, or to determine it at run time.
+
+Note: some of these options are supported only for specified query functions. If an unsupported option is passed, the search will continue as if it had not been.
 
 |name|type|default|description|
 |-|-|-|-|
 |caseSensitive|boolean|false|whether or not to match case|
 |n|number|-1|for `findN` and `findAnyN` queries only, how many items to find. -1 returns all. 0 returns null.
+|queryFunction|string|'all'|selects the query function to call. the string is the function name, all lowercase, dropping 'find', e.g. 'byid' or 'anyone'
 
 
 ## Putting it all together
@@ -60,22 +67,23 @@ Let's say you have a table of employee info or something.
 You want to find all employees with the name Jeff that don't have an email.
 
 ```javascript
-db.find('employees', {
-    name: {
-        eq: 'Jeff'
-    },
-    email: {
-        eq: undefined
+db.findAll(
+    new Query('employees', 'name', 'eq', 'Jeff'),
+    (err, entries) => {
+        if (err) console.log(err)
+        res.render('page', { employeesNamedJeff: entries })
     }
-})
+)
 ```
 
 or maybe you want any employees with '@gmail.com' or '@live.com' email adresses 
 
 ```javascript
-db.findAny('employees', {
-    email: {
-        regex: /.+@((gmail)|(live)).com/g
+db.findAny(
+    new Query('employees', 'email', 'regex', RegExp(/.+@((gmail)|(live)).com/g)),
+    (err, entries) => {
+        if (err) console.log(err)
     }
-})
+    res.render('page', { emails: entries })
+)
 ```
