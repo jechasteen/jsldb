@@ -1,11 +1,12 @@
 const fs = require('fs')
 const jsldb = require('../')
+const Query = require('../src/query')
 const path = require('path')
 const faker = require('faker')
 
-const { describe, test, expect } = require('jest')
+// const { describe, test, expect } = require('jest')
 
-const tPath = path.join(__dirname, '/test.db.json')
+const tPath = path.join(__dirname, 'test/test.db.json')
 
 const passingSchemas = {
     table1: {
@@ -67,7 +68,7 @@ let db
 
 describe('Creation, saving, and connection', () => {
     test('Create new database', () => {
-        db = jsldb.relational('test', passingSchemas, { autosave: true })
+        db = jsldb.relational('test', passingSchemas)
         expect(db).toBeTruthy()
     })
 
@@ -289,116 +290,116 @@ describe('Queries', () => {
 
     describe('findAll', () => {
         test('findAll - eq: string', (done) => {
-            db.findAll('table1', {
-                string: {
-                    eq: 'hello'
+            db.findAll(
+                'table1',
+                Query('string', 'eq', 'hello'),
+                (err, entries) => {
+                    if (err) done(err)
+                    expect(entries[t1EntryId]).toEqual(t1Entry)
+                    done()
                 }
-            }, (err, entries) => {
-                if (err) done(err)
-                expect(entries[t1EntryId]).toEqual(t1Entry)
-                done()
-            })
+            )
         })
 
         test('findAll - regex', (done) => {
-            db.findAll('table1', {
-                string: {
-                    regex: /^hell/
+            db.findAll(
+                'table1',
+                Query('string', 'regex', /^hell/),
+                (err, entries) => {
+                    expect(err).toBe(null)
+                    expect(entries[t1EntryId]).toEqual(t1Entry)
+                    done()
                 }
-            }, (err, entries) => {
-                expect(err).toBe(null)
-                expect(entries[t1EntryId]).toEqual(t1Entry)
-                done()
-            })
+            )
         })
 
         test('findAll - eq: number', (done) => {
-            db.findAll('table1', {
-                number: {
-                    eq: 42
+            db.findAll(
+                'table1',
+                Query('number', 'eq', 42),
+                (err, entries) => {
+                    if (err) done(err)
+                    expect(entries[t1EntryId]).toEqual(t1Entry)
+                    done()
                 }
-            }, (err, entries) => {
-                if (err) done(err)
-                expect(entries[t1EntryId]).toEqual(t1Entry)
-                done()
-            })
+            )
         })
 
         test('findAll - gt: number', (done) => {
-            db.findAll('table1', {
-                number: {
-                    gt: 42
+            db.findAll(
+                'table1',
+                Query('number', 'gt', 42),
+                (err, entries) => {
+                    if (err) done(err)
+                    expect(entries[t1Entry2Id]).toEqual(t1Entry2)
+                    done()
                 }
-            }, (err, entries) => {
-                if (err) done(err)
-                expect(entries[t1Entry2Id]).toEqual(t1Entry2)
-                done()
-            })
+            )
         })
 
         test('findAll - lt: number', (done) => {
-            db.findAll('table1', {
-                number: {
-                    lt: 100
+            db.findAll(
+                'table1',
+                Query('number', 'lt', 100),
+                (err, entries) => {
+                    if (err) done(err)
+                    expect(entries[t1EntryId]).toEqual(t1Entry)
+                    done()
                 }
-            }, (err, entries) => {
-                if (err) done(err)
-                expect(entries[t1EntryId]).toEqual(t1Entry)
-                done()
-            })
+            )
         })
 
         test('findAll - gte: number', (done) => {
-            db.findAll('table1', {
-                number: {
-                    gte: 42
+            db.findAll(
+                'table1', 
+                Query('number', 'gte', 42),
+                (err, entries) => {
+                    if (err) done(err)
+                    expect(entries[t1EntryId]).toEqual(t1Entry)
+                    expect(entries[t1Entry2Id]).toEqual(t1Entry2)
+                    done()
                 }
-            }, (err, entries) => {
-                if (err) done(err)
-                expect(entries[t1EntryId]).toEqual(t1Entry)
-                expect(entries[t1Entry2Id]).toEqual(t1Entry2)
-                done()
-            })
+            )
         })
 
         test('findAll - lte: number', (done) => {
-            db.findAll('table1', {
-                number: {
-                    lte: 105
+            db.findAll(
+                'table1',
+                Query('number', 'lte', 105),
+                (err, entries) => {
+                    if (err) done(err)
+                    expect(entries[t1EntryId]).toEqual(t1Entry)
+                    expect(entries[t1Entry2Id]).toEqual(t1Entry2)
+                    done()
                 }
-            }, (err, entries) => {
-                if (err) done(err)
-                expect(entries[t1EntryId]).toEqual(t1Entry)
-                expect(entries[t1Entry2Id]).toEqual(t1Entry2)
-                done()
-            })
+            )
         })
 
         test('findAll - contains', (done) => {
-            db.findAll('table2', {
-                numberArray: {
-                    contains: 2
+            db.findAll(
+                'table2', 
+                Query('numberArray', 'contains', 2),
+                (err, entries) => {
+                    if (err) done(err)
+                    expect(entries[t2EntryId]).toEqual(t2Entry)
+                    done()
                 }
-            }, (err, entries) => {
-                if (err) done(err)
-                expect(entries[t2EntryId]).toEqual(t2Entry)
-                done()
-            })
+            )
         })
 
         test('findAll multiple rules - gt / lt', (done) => {
-            db.findAll('table1', {
-                number: {
-                    gt: 42
-                },
-                number: {
-                    lt: 106
+            db.findAll(
+                'table1',
+                [
+                    Query('number', 'gt', 42),
+                    Query('number', 'lt', 106)
+                ],
+                (err, entries) => {
+                    if (err) done(err)
+                    expect(entries[t1Entry2Id]).toEqual(t1Entry2)
+                    done()
                 }
-            }, (err, entries) => {
-                if (err) done(err)
-                expect(entries[t1Entry2Id]).toEqual(t1Entry2)
-                done()
-            })
+            )
         })
     })
 })
@@ -468,5 +469,16 @@ describe('Faker', () => {
     })
 })
 
-if (fs.existsSync(tPath)) { fs.unlinkSync(tPath) }
-if (fs.existsSync(`${tPath}.old`)) { fs.unlinkSync(`${tPath}.old`) }
+afterAll(() => {
+    cleanup()
+})
+
+process.on('exit', (code) => {
+    console.log(`Exited. Code ${code}`);
+    cleanup()
+})
+
+function cleanup () {
+    fs.unlinkSync(tPath)
+    fs.unlinkSync(`${tPath}.old`)
+}
