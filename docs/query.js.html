@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>
-      Home - Documentation
+      query.js - Documentation
   </title>
 
   <link href="https://www.braintreepayments.com/images/favicon-ccda0b14.png" rel="icon" type="image/png">
@@ -51,14 +53,14 @@
 
   <div class="top-nav-wrapper">
     <ul>
-      <li  class="active" >
+      <li >
         <a href="index.html">
           
-          
-            <svg fill="#0095dd" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+            <svg fill="#6D6D6D" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
               <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
               <path d="M0 0h24v24H0z" fill="none"/>
             </svg>
+          
           
         </a>
       </li>
@@ -87,28 +89,39 @@
 
   <div id="main">
     
+      <h1 class="page-title">
+        query.js
+      </h1>
+    
 
     
       
 
+<section>
+  <article>
+    <pre class="prettyprint source linenums"><code>/**
+ * Create a new query object.
+ * This is a convenience function that creates a new object with one key.
+ * You could create the objects manually, it's just cumbersome and bulky
+ * @param {string} table The table name to search
+ * @param {string} field The field to match
+ * @param {string} fn The search function to use
+ * @param {*} val The value to use in the search function
+ */
+function Query (table, field, fn, val) {
+    if (!table || !field || !fn || !val) {
+        throw new Error('new Query: all arguments are required')
+    }
+    this.table = table
+    this.field = field
+    this.fn = fn
+    this.val = val
+}
 
-
-    
-
-      
-
-
-  <section class="readme">
-    <article>
-      <h1>JavaScript Local Database</h1>
-<h2>Relational Database</h2>
-<p>Inspired by the <a href="mongoosejs.com">Mongoose</a> api</p>
-<p><a href="module-relational.html"><code>jsldb.relational()</code></a> returns an object that provides an api for inserting, removing, altering, and searching entries.
-This object maintains a list of tables, with each table having its own <a href="tutorial-schemas.html">Schema</a>.
-The information contained in the schema is used to ensure that before any data is added to the table, it satisfies the requirements.</p>
-    </article>
-  </section>
-
+module.exports = Query
+</code></pre>
+  </article>
+</section>
 
     
 

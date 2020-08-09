@@ -7,7 +7,8 @@
     "source": {
         "include": [
             "index.js",
-            "src/relational.js"
+            "src/relational.js",
+            "src/query.js"
         ]
     },
     "sourceType": "module",
