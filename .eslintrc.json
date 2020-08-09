@@ -3,7 +3,8 @@
         "browser": false,
         "commonjs": true,
         "es2020": true,
-        "node": true
+        "node": true,
+        "jest/locals": true
     },
     "extends": [
         "standard"

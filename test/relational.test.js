@@ -4,8 +4,6 @@ const Query = require('../src/query')
 const path = require('path')
 const faker = require('faker')
 
-// const { describe, test, expect } = require('jest')
-
 const tPath = path.join(__dirname, 'test/test.db.json')
 
 const passingSchemas = {
