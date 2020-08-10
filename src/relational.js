@@ -32,9 +32,9 @@ module.exports = function (name, schema, options = { autosave: false }) {
     db.path = undefined
     setPath()
     if (fs.existsSync(db.path)) {
-        connect(name)
+        connect()
     } else {
-        create(name)
+        create()
     }
 
     // Borrowed from faker sources because it's a fabulous method for javascript
@@ -243,48 +243,46 @@ module.exports = function (name, schema, options = { autosave: false }) {
      * @param {string} table - The name of the table to be queried
      * @param {Object} query - An array composed of objects with `key: value` pairs to be matched. An empty object `{}` results in the whole table being returned.
      * @param {Object} options - Search options
-     * @param {boolean} options.caseSensitive - True for case sensitive search, default false
+     * @param {boolean} options.caseSensitive - True for case sensitive search, default true
      * @param {number} options.n - Only for *N queries, the number of results to return
      * @param {string} options.queryType - The type of query to perform. One of: id, anyN, anyOne, all, one, n, any.
      * @param {function} cb - Callback function (error?, resultsObject)
      */
     function find (query, options, cb) {
         if (typeof options === 'function') cb = options
-        if (!options || (options && !options.queryType)) {
+        if (!options || !options.queryType) {
             if (!options) options = {}
+        }
+        if (!options.queryType) {
             options.queryType = 'all'
         }
         if (options.queryType === 'id' && typeof query === 'string') {
             return findById(table, query, cb)
         } else if (options.queryType === 'all') {
-            return findAll(table, query, cb)
+            return findAll(query, cb)
         }
     }
 
     function findAll (query, cb) {
-        if (query instanceof Array) {
-            debugger;
+        if (typeof cb !== 'function') {
+            return cb(new Error('Second parameter to findAll must be function type.', null))
         }
         let found = []
         if (query instanceof Query) {
             found.push(search(db.tables[query.table], query.field, query.fn, query.val))
         } else if (query instanceof Array) {
             for (var q in query) {
-                if (!query[q] || !(query[q] instanceof Query)) cb(new Error('Queries must be instances of the Query object.'))
+                if (!query[q] || !(query[q] instanceof Query)) {
+                    return cb(new Error('Queries must be instances of the Query object.', null))
+                }
                 found.push(search(db.tables[query[q].table], query[q].field, query[q].fn, query[q].val))
             }
         } else {
-            cb(new Error('Query was neither an array of Query objects, nor a Query object.'), null)
+            cb(new Error('Query parameter must be either an array of Query objects, or a single Query object.'), null)
         }
 
-        for (var i in found) {
-            if (found[i].length === 0) {
-                found.splice[i, 1]
-            }
-        }
         if (found.length === 0) {
-            cb(null, null)
-            return null
+            return cb(null, null)
         }
 
         const ret = {}
@@ -315,9 +313,8 @@ module.exports = function (name, schema, options = { autosave: false }) {
             cb(null, ret)
             return ret
         } else {
-            return(null, null)
+            return cb(null, null)
         }
-        return ret.size() > 0 ? ret : null
     }
 
     /**
