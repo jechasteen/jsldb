@@ -265,7 +265,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
 
     function findAll (query, cb) {
         if (typeof cb !== 'function') {
-            return cb(new Error('Second parameter to findAll must be function type.', null))
+            throw new Error('Second parameter to findAll must be function type.')
         }
         let found = []
         if (query instanceof Query) {
