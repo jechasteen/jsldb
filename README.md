@@ -1,6 +1,6 @@
 # JavaScript Local Database
 
-[![Build Status](https://travis-ci.org/jechasteen/jsldb.svg?branch=master)](https://travis-ci.org/jechasteen/jsldb) [![codecov](https://codecov.io/gh/jechasteen/jsldb/branch/master/graph/badge.svg)](https://codecov.io/gh/jechasteen/jsldb) [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![Build Status](https://travis-ci.org/jechasteen/jsldb.svg?branch=master)](https://travis-ci.org/jechasteen/jsldb) [![codecov](https://codecov.io/gh/jechasteen/jsldb/branch/master/graph/badge.svg)](https://codecov.io/gh/jechasteen/jsldb) [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/jechasteen/jsldb.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/jechasteen/jsldb/context:javascript)
 
 jsldb saves as a JSON file, but responds with easy to use JS objects from memory.
 
