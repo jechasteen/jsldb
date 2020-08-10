@@ -1,8 +1,8 @@
 path_classifiers:
   test:
-    - "test/*.test.js"
+    - "test/**/*.test.js"
   library:
-    - "**.js"
+    - "**/*.js"
 extraction:
   javascript:
     index:
