@@ -58,7 +58,7 @@ Note: some of these options are supported only for specified query functions. If
 |-|-|-|-|
 |caseSensitive|boolean|false|whether or not to match case|
 |n|number|-1|for `findN` and `findAnyN` queries only, how many items to find. -1 returns all. 0 returns null.
-|queryFunction|string|'all'|selects the query function to call. the string is the function name, all lowercase, dropping 'find', e.g. 'byid' or 'anyone'
+|queryFunction|string|'all'|selects the query function to call. the string is the function name, dropping 'find', e.g. 'anyOne'
 
 
 ## Putting it all together
