@@ -1,0 +1,11 @@
+path_classifiers:
+  test:
+    - "test/**/*.test.js"
+  library:
+    - "**/*.js"
+extraction:
+  javascript:
+    index:
+      exclude:
+        - docs
+        - 'jest.config.js'
