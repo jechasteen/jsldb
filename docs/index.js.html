@@ -72,7 +72,7 @@
 
   <nav>
     <h3 class="reference-title">
-      jsldb
+      jsimdb
     </h3>
 
     
@@ -202,9 +202,9 @@ const verifyTables = (unverifiedTables, cb) => {
  * Initialize a new database.
  * This should be done with a new require() call for each database to be created.
  * @example
- * let db1 = require('jsldb')
+ * let db1 = require('jsimdb')
  * db1.create('db1', db1schema, true);
- * let db2 = require('jsldb');
+ * let db2 = require('jsimdb');
  * db2.create('db2, db2schema, false);
  * @param {string} name - The name of the new database
  * @param {Object} schema - A [tables]{@link docs/tables} schema object
@@ -241,7 +241,7 @@ exports.create = (name, schema, autosave = false) => {
  * Connect to an existing database. Function expects just the "name" of the database as an abbreviation of the
  * filename name.db.json which this function will attempt to load.
  * @example
- * let db = require('jsldb');
+ * let db = require('jsimdb');
  * db.connect('db');
  * @param {string} name - The name of the database to be loaded
  * @throws if the database given does not exist
