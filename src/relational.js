@@ -263,37 +263,33 @@ module.exports = function (name, schema, options = { autosave: false }) {
         }
     }
 
-    function parseQuery(query) {
-        let found = []
-        if (query instanceof Query) {
-            found.push(search(db.tables[query.table], query.field, query.fn, query.val))
-        } else if (query instanceof Array) {
-            for (var q in query) {
-                if (!query[q] || !(query[q] instanceof Query)) {
-                    throw 'Queries must be instances of the Query object.'
-                }
-                found.push(search(db.tables[query[q].table], query[q].field, query[q].fn, query[q].val))
-            }
-        } else {
-            throw 'Query parameter must be either an array of Query objects, or a single Query object.'
-        }
-        return found;
-    }
-
-    function findAll (query, cb) {
-        if (typeof cb !== 'function') {
-            throw new Error('Second parameter to findAll must be function type.')
-        }
-        let found
-
+    function parseQuery(query, cb) {
         try {
-            found = parseQuery(query)
-            if (found.length === 0) {
-                return cb(null, null)
+            if (typeof cb !== 'function') {
+                throw 'Second parameter to findAll must be function type.'
+            }            
+            let found = []
+            if (query instanceof Query) {
+                found.push(search(db.tables[query.table], query.field, query.fn, query.val))
+            } else if (query instanceof Array) {
+                for (var q in query) {
+                    if (!query[q] || !(query[q] instanceof Query)) {
+                        throw 'Queries must be instances of the Query object.'
+                    }
+                    found.push(search(db.tables[query[q].table], query[q].field, query[q].fn, query[q].val))
+                }
+            } else {
+                throw 'Query parameter must be either an array of Query objects, or a single Query object.'
             }
+            if (found.length === 0) return cb(null, null)
+            else return found
         } catch (e) {
             throw new Error('Failed to parse query: ' + e)
         }
+    }
+
+    function findAll (query, cb) {
+        let found = parseQuery(query, cb)
 
         const ret = {}
         if (found.length === 1) {
@@ -325,6 +321,10 @@ module.exports = function (name, schema, options = { autosave: false }) {
         } else {
             return cb(null, null)
         }
+    }
+
+    function findAny (query, cb) {
+
     }
 
     /**
