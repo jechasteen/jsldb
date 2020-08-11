@@ -18,17 +18,15 @@ if (!Object.size) {
  * @module relational
  * @example
  * let jsimdb = require('jsimdb').relational
- * let db1 = jsimdb('db1', db1schema, { autosave: true })
+ * let db1 = jsimdb('db1', db1schema)
  * let db2 = jsimdb('db2, db2schema);
  * @param {string} name - The database's name. Must be unique.
  * @param {schema} schema - A Schema object that describes the table requirements.
  * @param {Object} options - Database optionals
- * @param {boolean} options.autosave - Save to file on changes
  */
-module.exports = function (name, schema, options = { autosave: false }) {
+module.exports = function (name, schema, options) {
     const supportedTypes = ['number', 'string', 'date']
     let db = {}
-    db.autosave = options.autosave
     db.path = undefined
     setPath()
     if (fs.existsSync(db.path)) {
@@ -195,10 +193,6 @@ module.exports = function (name, schema, options = { autosave: false }) {
         } else {
             cb(new Error(`Table has no entry with id ${id}`))
         }
-
-        if (db.autosave) {
-            save()
-        }
     }
 
     function duplicateFileIfExists () {
@@ -233,8 +227,8 @@ module.exports = function (name, schema, options = { autosave: false }) {
 
     /**
      * Query a table using query object.
-     * This is a convenience function. You can call any of the other functions
-     * using options.queryType. If not specified, defaults to 'all' type search.
+     * You can call any of the other functions using options.queryType.
+     * If not specified, defaults to 'all' type search.
      * @tutorial queries
      * @instance
      * @param {string} table - The name of the table to be queried
@@ -264,7 +258,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
         }
     }
 
-    function parseQuery(query, cb) {
+    function execQuery(query, cb) {
         try {
             if (typeof cb !== 'function' && cb !== undefined) {
                 throw 'Second parameter to find* must be function type.'
@@ -290,35 +284,37 @@ module.exports = function (name, schema, options = { autosave: false }) {
         }
     }
 
+    function convertEntryArrayToObject(query, ids) {
+        const ret = new Object()
+        for (var i in ids) {
+            ret[ids[i]] = db.tables[query.table][ids[i]]
+        }
+        return Object.size(ret) === 0 ? null : ret
+    }
+
     function findAll (query, cb) {
-        let found = parseQuery(query, cb)
+        let found = execQuery(query, cb)
         if (!found) return cb(null, null)
 
-        const ret = {}
+        let ret = {}
         if (found.length === 1) {
-            found = found[0]
-            for (const i in found) {
-                const id = found[i]
-                ret[id] = db.tables[query.table][id]
-            }
+            ret = convertEntryArrayToObject(query, found[0])
             cb(null, ret)
             return ret
         } else if (found.length > 1) {
-            let same = [];
+            let common = [];
             while (found.length > 1) {
                 for (var i in found[0]) {
                     for (var j in found[1]) {
-                        if (found[0][i] === found[1][j]) {
-                            same.push(found[0][i])
+                        if (found[0][i] === found[1][j] && common.indexOf(found[0][i]) === -1) {
+                            common.push(found[0][i])
                         }
                     }
                 }
                 found.shift()
-                found[0] = same
+                found[0] = common
             }
-            for (var i in same) {
-                ret[same[i]] = db.tables[query[0].table][same[i]]
-            }
+            ret = convertEntryArrayToObject(query[0], common)
             cb(null, ret)
             return ret
         } else {
@@ -327,7 +323,30 @@ module.exports = function (name, schema, options = { autosave: false }) {
     }
 
     function findAny (query, cb) {
+        let found = execQuery(query, cb)
+        if (!found) return cb(null, null)
 
+        let ret = {}
+        if (found.length === 1) {
+            ret = convertEntryArrayToObject(query, found[0])
+            cb(null, ret)
+            return ret
+        } else if (found.length > 1) {
+            let all = []
+            while (found.length > 0) {
+                for (var i in found[0]) {
+                    if (all.indexOf(found[0][i] === -1)) {
+                        all.push(found[0][i])
+                    }
+                }
+                found.shift()
+            }
+            ret = convertEntryArrayToObject(query[0], all)
+            cb(null, ret)
+            return ret
+        } else {
+            return cb(null, null)
+        }
     }
 
     /**
@@ -390,10 +409,6 @@ module.exports = function (name, schema, options = { autosave: false }) {
         const id = getUUID()
         db.tables[table][id] = entry
         db.tables[table][id]._id = id
-
-        if (db.autosave) {
-            save()
-        }
 
         cb(null, db.tables[table][id])
         return false
@@ -460,9 +475,6 @@ module.exports = function (name, schema, options = { autosave: false }) {
             } else {
                 cb(new Error(`${id} does not exist in ${table}.`), null)
                 return false
-            }
-            if (db.autosave) {
-                save()
             }
             return true
         } else {
@@ -536,7 +548,7 @@ module.exports = function (name, schema, options = { autosave: false }) {
         find: find,
         findById: findById,
         findAll: findAll,
-        // findAny: findAny,
+        findAny: findAny,
         // findAnyN: findAnyN,
         // findAnyOne: findAnyOne,
         // findN: findN,

@@ -392,6 +392,44 @@ describe('Queries', () => {
         })
     })
 
+    describe('findAny', () => {
+        // It's relatively pointless to use this function like this, but it is supported
+        test('find a table1 entry', (done) => {
+            db.findAny(
+                new Query('table1', 'number', 'eq', 42),
+                (err, entries) => {
+                    expect(err).toBeNull()
+                    expect(entries[t1EntryId]).toEqual(t1Entry)
+                    done()
+                }
+            )
+        })
+        test('find both table1 entries', (done) => {
+            db.findAny([
+                new Query('table1', 'number', 'eq', 42),
+                new Query('table1', 'number', 'eq', 105)
+            ], (err, entries) => {
+                expect(err).toBeNull()
+                expect(entries[t1EntryId]).toEqual(t1Entry)
+                expect(entries[t1Entry2Id]).toEqual(t1Entry2)
+                done()
+            })
+        })
+
+        test('find with no results should return null, and pass null as both params to the callback', (done) => {
+            expect((() => {
+                return db.findAny(
+                    new Query('table1', 'number', 'eq', 41),
+                    (err, entries) => {
+                        expect(err).toBeNull()
+                        expect(entries).toBeNull()
+                        done()
+                    }
+                )
+            })()).toBeNull()
+        })
+    })
+
     describe('find Errors', () => {
         const fakeQuery = new Query("table1", 'number', "eq", 42)
 
