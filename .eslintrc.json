@@ -4,8 +4,9 @@
         "commonjs": true,
         "es2020": true,
         "node": true,
-        "jest/locals": true
+        "jest/globals": true
     },
+    "plugins": ["jest"],
     "extends": [
         "standard"
     ],

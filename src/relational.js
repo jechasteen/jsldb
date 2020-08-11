@@ -249,8 +249,8 @@ module.exports = function (name, schema, options) {
         if (!options.queryType) {
             options.queryType = 'all'
         }
-        if (options.queryType === 'id' && typeof query === 'string') {
-            return findById(table, query, cb)
+        if (options.queryType === 'id' && typeof query === 'string' && typeof options === 'string') {
+            return findById(query, options, cb)
         } else if (options.queryType === 'all') {
             return findAll(query, cb)
         } else {
@@ -258,34 +258,34 @@ module.exports = function (name, schema, options) {
         }
     }
 
-    function execQuery(query, cb) {
+    function execQuery (query, cb) {
         try {
             if (typeof cb !== 'function' && cb !== undefined) {
-                throw 'Second parameter to find* must be function type.'
-            }            
-            let found = []
+                throw new TypeError('Second parameter to find* must be function type.')
+            }
+            const found = []
             if (query instanceof Query) {
                 found.push(search(db.tables[query.table], query.field, query.fn, query.val))
             } else if (query instanceof Array) {
                 for (var q in query) {
                     if (!query[q] || !(query[q] instanceof Query)) {
-                        throw 'Queries must be instances of the Query object.'
+                        throw new Error('Queries must be instances of the Query object.')
                     }
                     found.push(search(db.tables[query[q].table], query[q].field, query[q].fn, query[q].val))
                 }
             } else {
-                throw 'Query parameter must be either an array of Query objects, or a single Query object.'
+                throw new Error('Query parameter must be either an array of Query objects, or a single Query object.')
             }
             if (found.length === 0) return null
             else return found
         } catch (e) {
-            console.err('Failed to parse query: ' + e)
+            console.err('Failed to parse query: ' + e.text)
             return null
         }
     }
 
-    function convertEntryArrayToObject(query, ids) {
-        const ret = new Object()
+    function convertEntryArrayToObject (query, ids) {
+        const ret = {}
         for (var i in ids) {
             ret[ids[i]] = db.tables[query.table][ids[i]]
         }
@@ -293,7 +293,7 @@ module.exports = function (name, schema, options) {
     }
 
     function findAll (query, cb) {
-        let found = execQuery(query, cb)
+        const found = execQuery(query, cb)
         if (!found) return cb(null, null)
 
         let ret = {}
@@ -302,7 +302,7 @@ module.exports = function (name, schema, options) {
             cb(null, ret)
             return ret
         } else if (found.length > 1) {
-            let common = [];
+            const common = []
             while (found.length > 1) {
                 for (var i in found[0]) {
                     for (var j in found[1]) {
@@ -323,7 +323,7 @@ module.exports = function (name, schema, options) {
     }
 
     function findAny (query, cb) {
-        let found = execQuery(query, cb)
+        const found = execQuery(query, cb)
         if (!found) return cb(null, null)
 
         let ret = {}
@@ -332,7 +332,7 @@ module.exports = function (name, schema, options) {
             cb(null, ret)
             return ret
         } else if (found.length > 1) {
-            let all = []
+            const all = []
             while (found.length > 0) {
                 for (var i in found[0]) {
                     if (all.indexOf(found[0][i] === -1)) {

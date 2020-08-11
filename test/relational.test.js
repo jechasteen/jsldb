@@ -69,21 +69,21 @@ describe('Creation, saving, and connection', () => {
         db = jsimdb.relational('test', passingSchemas)
         expect(db).toBeTruthy()
     })
-    
+
     test('Creation errors', () => {
         for (var bad in failingSchemas) {
             try {
-                let _ = jsimdb.relational('bad', failingSchemas[bad])
+                const _ = jsimdb.relational('bad', failingSchemas[bad])
             } catch (e) {
                 expect(e).toBeDefined()
             }
         }
     })
-    
+
     test('Save (sync)', () => {
         expect(db.saveSync()).toBe(true)
     })
-    
+
     test('Connect to existing database', () => {
         db = jsimdb.relational('test', passingSchemas)
         expect(db).toBeTruthy()
@@ -119,7 +119,7 @@ describe('Entry insertion and modification', () => {
             done()
         })
     })
-    
+
     test('Insert a second table1 entry', (done) => {
         db.insert('table1', t1Entry2, (err, entry) => {
             if (err) done(err)
@@ -144,7 +144,7 @@ describe('Entry insertion and modification', () => {
                 done()
             })
         })
-        
+
         test('Insert a broken entry (string)', (done) => {
             const entry = {
                 number: 42,
@@ -199,12 +199,12 @@ describe('Entry insertion and modification', () => {
             done()
         })
     })
-    
+
     test('Table 1 should be size 2, table 2 should be size 1.', () => {
         expect(Object.size(db.getAllEntries('table1'))).toEqual(2)
         expect(Object.size(db.getAllEntries('table2'))).toEqual(1)
     })
-    
+
     // Tie the two together
     test('setFieldById - link 1->2', (done) => {
         db.setFieldById('table1', t1EntryId, 'idLink', t2EntryId, (err, entry) => {
@@ -214,7 +214,7 @@ describe('Entry insertion and modification', () => {
             done()
         })
     })
-    
+
     test('setFieldById - link 2->1', (done) => {
         db.setFieldById('table2', t2EntryId, 'idLinkArray', [t1EntryId], (err, entry) => {
             if (err) done(err)
@@ -222,7 +222,7 @@ describe('Entry insertion and modification', () => {
             done()
         })
     })
-    
+
     test('setFieldById - non-existent id', (done) => {
         db.setFieldById('table1', 0, 'number', 12, (err, entry) => {
             expect(err).toBeDefined()
@@ -254,14 +254,14 @@ describe('Get raw members', () => {
         expect(db.tables()).toHaveProperty('table2')
         expect(db.tables().table2[t2EntryId]).toEqual(t2Entry)
     })
-    
+
     test('Get all entries in table1 and table2', () => {
         expect(db.getAllEntries('table1')).toHaveProperty(t1EntryId)
         expect(db.getAllEntries('table1')[t1EntryId]).toEqual(t1Entry)
         expect(db.getAllEntries('table1')).toHaveProperty(t1EntryId)
         expect(db.getAllEntries('table1')[t1EntryId]).toEqual(t1Entry)
     })
-    
+
     test('Get database path', () => {
         expect(db.path()).toEqual(tPath)
     })
@@ -276,7 +276,7 @@ describe('Queries', () => {
                 done()
             })
         })
-        
+
         test('Find by id (non-existent)', (done) => {
             db.findById('table1', '0', (err, entry) => {
                 expect(err).toBeDefined()
@@ -297,7 +297,7 @@ describe('Queries', () => {
                 }
             )
         })
-        
+
         test('findAll - regex', (done) => {
             db.findAll(
                 new Query('table1', 'string', 'regex', RegExp(/^hell/)),
@@ -308,7 +308,7 @@ describe('Queries', () => {
                 }
             )
         })
-        
+
         test('findAll - eq: number', (done) => {
             db.findAll(
                 new Query('table1', 'number', 'eq', 42),
@@ -319,7 +319,7 @@ describe('Queries', () => {
                 }
             )
         })
-            
+
         test('findAll - gt: number', (done) => {
             db.findAll(
                 new Query('table1', 'number', 'gt', 42),
@@ -330,7 +330,7 @@ describe('Queries', () => {
                 }
             )
         })
-            
+
         test('findAll - lt: number', (done) => {
             db.findAll(
                 new Query('table1', 'number', 'lt', 100),
@@ -353,7 +353,7 @@ describe('Queries', () => {
                 }
             )
         })
-            
+
         test('findAll - lte: number', (done) => {
             db.findAll(
                 new Query('table1', 'number', 'lte', 105),
@@ -365,7 +365,7 @@ describe('Queries', () => {
                 }
             )
         })
-        
+
         test('findAll - contains', (done) => {
             db.findAll(
                 new Query('table2', 'numberArray', 'contains', 2),
@@ -431,7 +431,7 @@ describe('Queries', () => {
     })
 
     describe('find Errors', () => {
-        const fakeQuery = new Query("table1", 'number', "eq", 42)
+        const fakeQuery = new Query('table1', 'number', 'eq', 42)
 
         describe('find() parameter tests', () => {
             test('second paramater can be an object or a function', () => {
@@ -446,13 +446,13 @@ describe('Queries', () => {
                     db.findAll(9)
                 }).toThrow()
             })
-    
+
             test('query parameter should be an array of instances of Query', () => {
                 expect(() => {
                     db.findAll([9])
                 }).toThrow()
             })
-    
+
             test('cb parameter should be of type function or undefined', () => {
                 expect(() => {
                     db.findAll(fakeQuery, 9)
