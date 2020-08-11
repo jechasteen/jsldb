@@ -1,5 +1,5 @@
 const fs = require('fs')
-const jsldb = require('../')
+const jsimdb = require('../')
 const Query = require('../src/query')
 const path = require('path')
 const faker = require('faker')
@@ -66,14 +66,14 @@ let db
 
 describe('Creation, saving, and connection', () => {
     test('Create new database', () => {
-        db = jsldb.relational('test', passingSchemas)
+        db = jsimdb.relational('test', passingSchemas)
         expect(db).toBeTruthy()
     })
     
     test('Creation errors', () => {
         for (var bad in failingSchemas) {
             try {
-                let _ = jsldb.relational('bad', failingSchemas[bad])
+                let _ = jsimdb.relational('bad', failingSchemas[bad])
             } catch (e) {
                 expect(e).toBeDefined()
             }
@@ -85,7 +85,7 @@ describe('Creation, saving, and connection', () => {
     })
     
     test('Connect to existing database', () => {
-        db = jsldb.relational('test', passingSchemas)
+        db = jsimdb.relational('test', passingSchemas)
         expect(db).toBeTruthy()
     })
 })
@@ -451,7 +451,7 @@ describe('delete operations', () => {
 describe('Faker', () => {
     test('Faker', () => {
         const fakeQuant = 1000
-        const fakeDB = jsldb.relational('fake', {
+        const fakeDB = jsimdb.relational('fake', {
             people: {
                 name: {
                     type: 'string',
