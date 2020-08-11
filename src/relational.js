@@ -265,8 +265,8 @@ module.exports = function (name, schema, options = { autosave: false }) {
 
     function parseQuery(query, cb) {
         try {
-            if (typeof cb !== 'function') {
-                throw 'Second parameter to findAll must be function type.'
+            if (typeof cb !== 'function' && cb !== undefined) {
+                throw 'Second parameter to find* must be function type.'
             }            
             let found = []
             if (query instanceof Query) {
@@ -281,15 +281,17 @@ module.exports = function (name, schema, options = { autosave: false }) {
             } else {
                 throw 'Query parameter must be either an array of Query objects, or a single Query object.'
             }
-            if (found.length === 0) return cb(null, null)
+            if (found.length === 0) return null
             else return found
         } catch (e) {
-            throw new Error('Failed to parse query: ' + e)
+            console.err('Failed to parse query: ' + e)
+            return null
         }
     }
 
     function findAll (query, cb) {
         let found = parseQuery(query, cb)
+        if (!found) return cb(null, null)
 
         const ret = {}
         if (found.length === 1) {

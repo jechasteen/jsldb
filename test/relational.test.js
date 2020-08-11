@@ -391,6 +391,26 @@ describe('Queries', () => {
             )
         })
     })
+
+    describe('find Errors', () => {
+        test('query parameter should be instance of Query', () => {
+            expect(() => {
+                db.findAll(9)
+            }).toThrow()
+        })
+
+        test('query parameter should be an array of instances of Query', () => {
+            expect(() => {
+                db.findAll([9])
+            }).toThrow()
+        })
+
+        test('cb parameter should be of type function or undefined', () => {
+            expect(() => {
+                db.findAll(new Query(), 9)
+            }).toThrow()
+        })
+    })
 })
 
 describe('delete operations', () => {
