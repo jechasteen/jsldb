@@ -2,9 +2,11 @@
 
 [![Build Status](https://travis-ci.org/jechasteen/jsimdb.svg?branch=master)](https://travis-ci.org/jechasteen/jsimdb) [![codecov](https://codecov.io/gh/jechasteen/jsimdb/branch/master/graph/badge.svg)](https://codecov.io/gh/jechasteen/jsimdb) [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/jechasteen/jsimdb.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/jechasteen/jsimdb/context:javascript)
 
-jsimdb saves as a JSON file, but responds with easy to use JS objects from memory.
+In-memory database for Node with no dependencies.
+jsimdb is type safe, fast, and easy to use.
 
-An in-memory database for Node with no dependencies, jsimdb is type safe, fast, and easy to use.
+jsimdb is intended for rapid prototyping and other non-critical use-cases.
+Get functionality similar to mongoose without needing to spin up an instance.
 
 *NOTE: This project is currently a work in progress and, as such, will be under heavy development. Use at your own risk before version 0.1.0*
 
@@ -21,7 +23,7 @@ A table is a named object that contains any number of `entries`, each of which i
 Each of these entries must conform to a rigid [schema](https://jechasteen.github.io/jsimdb/tutorial-schemas.html) that ensures that the types conform.
 
 Upon insertion of a new entry, the entry is compared against the schema for type, and optionally to ensure that the `field` has a defined value.
-Accessing an entry directly via its id is a quick operation (see [this V8 devblog](https://v8.dev/blog/fast-properties) for more info about property access optimization).
+Accessing an entry directly via its id is a quick operation thanks to V8 optimizations (see [this V8 devblog](https://v8.dev/blog/fast-properties) for more info).
 
 A table can also be searched using one of several query functions.
 Each of these query functions take a [query object](https://jechasteen.github.io/jsimdb/tutorial-queries.html) that defines rules for matching entries.
@@ -72,6 +74,19 @@ app.get('/table1/:id', (req, res) => {
             res.render('table1', data)
         }
     })
+})
+
+app.get('/table/q/:query', (req, res) => {
+    db.findAll(
+        new Query('table1', 'field1', 'eq', 'some string'),
+        (err, entries) => {
+            if (err) {
+                res.render('error', { error: err })
+            } else {
+                res.render('query', { results: entries })
+            }
+        }
+    )
 })
 
 app.post('/table1', (req, res) => {
