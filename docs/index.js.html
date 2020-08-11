@@ -116,8 +116,6 @@ db.path = undefined;
 exports.path = function () {
     return db.path;
 };
-// Holds the autosave option passed at database creation, default false. Also set after connecting to an existing db
-db.autosave = false;
 
 const uuidQueue = (function () {
     const uuids = [];
@@ -208,17 +206,15 @@ const verifyTables = (unverifiedTables, cb) => {
  * db2.create('db2, db2schema, false);
  * @param {string} name - The name of the new database
  * @param {Object} schema - A [tables]{@link docs/tables} schema object
- * @param {boolean} autosave - Whether to save automatically at creation and on changes, default false
  * @throws if the database given already exists, or if table verification returns a check error.
  * @returns {boolean} - true if the database creation completed successfully. Undefined otherwise.
  */
-exports.create = (name, schema, autosave = false) => {
+exports.create = (name, schema) => {
     db.path = path.join(baseDir, `${name}.db.json`);
     const dbFilename = name + '.db.json';
     if (fs.existsSync(db.path)) {
         throw new Error(`Database ${name} already exists`);
     } else {
-        db.autosave = autosave;
         verifyTables(schema, (res, data) => {
             if (!res) {
                 throw new Error(
@@ -365,10 +361,6 @@ exports.insert = (table, entry, cb = () => {}) => {
     db.tables[table][id] = entry;
     db.tables[table][id]._id = id;
 
-    if (db.autosave) {
-        exports.save();
-    }
-
     cb(true, db.tables[table][id]);
     return false;
 };
@@ -393,9 +385,6 @@ exports.setFieldById = (table, id, field, value, cb = () => {}) => {
             console.log(`${id} does not exist in ${table}.`);
             cb(false, null);
         }
-        if (db.autosave) {
-            exports.save();
-        }
         return true;
     } else {
         cb(false, null);
@@ -415,9 +404,6 @@ exports.delete = (table, id, cb = () => {}) => {
         cb(true, id);
     } else {
         cb(false, id);
-    }
-    if (db.autosave) {
-        exports.save();
     }
 };
 

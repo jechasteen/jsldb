@@ -64,7 +64,7 @@ const tables = {
     }
 }
 
-const db = jsimdb.relational('newdb', tables, { autosave: true })
+const db = jsimdb.relational('newdb', tables)
 
 app.get('/table1/:id', (req, res) => {
     db.findById('table1', req.params.id, (err, data) => {
