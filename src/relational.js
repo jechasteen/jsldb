@@ -263,26 +263,36 @@ module.exports = function (name, schema, options = { autosave: false }) {
         }
     }
 
-    function findAll (query, cb) {
-        if (typeof cb !== 'function') {
-            throw new Error('Second parameter to findAll must be function type.')
-        }
+    function parseQuery(query) {
         let found = []
         if (query instanceof Query) {
             found.push(search(db.tables[query.table], query.field, query.fn, query.val))
         } else if (query instanceof Array) {
             for (var q in query) {
                 if (!query[q] || !(query[q] instanceof Query)) {
-                    return cb(new Error('Queries must be instances of the Query object.', null))
+                    throw 'Queries must be instances of the Query object.'
                 }
                 found.push(search(db.tables[query[q].table], query[q].field, query[q].fn, query[q].val))
             }
         } else {
-            cb(new Error('Query parameter must be either an array of Query objects, or a single Query object.'), null)
+            throw 'Query parameter must be either an array of Query objects, or a single Query object.'
         }
+        return found;
+    }
 
-        if (found.length === 0) {
-            return cb(null, null)
+    function findAll (query, cb) {
+        if (typeof cb !== 'function') {
+            throw new Error('Second parameter to findAll must be function type.')
+        }
+        let found
+
+        try {
+            found = parseQuery(query)
+            if (found.length === 0) {
+                return cb(null, null)
+            }
+        } catch (e) {
+            throw new Error('Failed to parse query: ' + e)
         }
 
         const ret = {}
