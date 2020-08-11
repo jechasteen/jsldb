@@ -17,9 +17,9 @@ if (!Object.size) {
 /**
  * @module relational
  * @example
- * let jsldb = require('jsldb').relational
- * let db1 = jsldb('db1', db1schema, { autosave: true })
- * let db2 = jsldb('db2, db2schema);
+ * let jsimdb = require('jsimdb').relational
+ * let db1 = jsimdb('db1', db1schema, { autosave: true })
+ * let db2 = jsimdb('db2, db2schema);
  * @param {string} name - The database's name. Must be unique.
  * @param {schema} schema - A Schema object that describes the table requirements.
  * @param {Object} options - Database optionals
@@ -128,9 +128,6 @@ module.exports = function (name, schema, options = { autosave: false }) {
             } else if (db.tables[s[1]][value]) {
                 return true
             }
-            return false
-        } else {
-            return false
         }
     }
 
@@ -250,6 +247,8 @@ module.exports = function (name, schema, options = { autosave: false }) {
      */
     function find (query, options, cb) {
         if (typeof options === 'function') cb = options
+        if ((typeof options !== 'object' && typeof options !== 'function') ||
+            (typeof cb !== 'function' || !cb)) return null
         if (!options || !options.queryType) {
             if (!options) options = {}
         }
@@ -260,30 +259,40 @@ module.exports = function (name, schema, options = { autosave: false }) {
             return findById(table, query, cb)
         } else if (options.queryType === 'all') {
             return findAll(query, cb)
+        } else {
+            return null
+        }
+    }
+
+    function parseQuery(query, cb) {
+        try {
+            if (typeof cb !== 'function' && cb !== undefined) {
+                throw 'Second parameter to find* must be function type.'
+            }            
+            let found = []
+            if (query instanceof Query) {
+                found.push(search(db.tables[query.table], query.field, query.fn, query.val))
+            } else if (query instanceof Array) {
+                for (var q in query) {
+                    if (!query[q] || !(query[q] instanceof Query)) {
+                        throw 'Queries must be instances of the Query object.'
+                    }
+                    found.push(search(db.tables[query[q].table], query[q].field, query[q].fn, query[q].val))
+                }
+            } else {
+                throw 'Query parameter must be either an array of Query objects, or a single Query object.'
+            }
+            if (found.length === 0) return null
+            else return found
+        } catch (e) {
+            console.err('Failed to parse query: ' + e)
+            return null
         }
     }
 
     function findAll (query, cb) {
-        if (typeof cb !== 'function') {
-            throw new Error('Second parameter to findAll must be function type.')
-        }
-        let found = []
-        if (query instanceof Query) {
-            found.push(search(db.tables[query.table], query.field, query.fn, query.val))
-        } else if (query instanceof Array) {
-            for (var q in query) {
-                if (!query[q] || !(query[q] instanceof Query)) {
-                    return cb(new Error('Queries must be instances of the Query object.', null))
-                }
-                found.push(search(db.tables[query[q].table], query[q].field, query[q].fn, query[q].val))
-            }
-        } else {
-            cb(new Error('Query parameter must be either an array of Query objects, or a single Query object.'), null)
-        }
-
-        if (found.length === 0) {
-            return cb(null, null)
-        }
+        let found = parseQuery(query, cb)
+        if (!found) return cb(null, null)
 
         const ret = {}
         if (found.length === 1) {
@@ -315,6 +324,10 @@ module.exports = function (name, schema, options = { autosave: false }) {
         } else {
             return cb(null, null)
         }
+    }
+
+    function findAny (query, cb) {
+
     }
 
     /**

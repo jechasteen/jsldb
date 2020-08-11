@@ -1,4 +1,4 @@
-# jsldb examples
+# jsimdb examples
 
 To run any of the examples in this directory, enter the sub-directory and then run `npm install && node index.js`.
 

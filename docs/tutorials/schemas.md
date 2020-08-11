@@ -1,7 +1,7 @@
 # Table Object Definition (Schema)
 
 When creating a new database, you must pass an object to the create function that sets the expectations for each table.
-A schema can contain multiple tables, or you could create a separate instance of JSLDB for each table.
+A schema can contain multiple tables, or you could create a separate instance of jsimdb for each table.
 
 ```
 const tables = {
