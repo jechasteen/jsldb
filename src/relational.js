@@ -128,9 +128,6 @@ module.exports = function (name, schema, options = { autosave: false }) {
             } else if (db.tables[s[1]][value]) {
                 return true
             }
-            return false
-        } else {
-            return false
         }
     }
 
@@ -250,6 +247,8 @@ module.exports = function (name, schema, options = { autosave: false }) {
      */
     function find (query, options, cb) {
         if (typeof options === 'function') cb = options
+        if ((typeof options !== 'object' && typeof options !== 'function') ||
+            (typeof cb !== 'function' || !cb)) return null
         if (!options || !options.queryType) {
             if (!options) options = {}
         }
@@ -260,6 +259,8 @@ module.exports = function (name, schema, options = { autosave: false }) {
             return findById(table, query, cb)
         } else if (options.queryType === 'all') {
             return findAll(query, cb)
+        } else {
+            return null
         }
     }
 

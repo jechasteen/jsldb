@@ -393,22 +393,33 @@ describe('Queries', () => {
     })
 
     describe('find Errors', () => {
-        test('query parameter should be instance of Query', () => {
-            expect(() => {
-                db.findAll(9)
-            }).toThrow()
+        const fakeQuery = new Query("table1", 'number', "eq", 42)
+
+        describe('find() parameter tests', () => {
+            test('second paramater can be an object or a function', () => {
+                expect(db.find(fakeQuery, 9) === null).toBeTruthy()
+                expect(db.find(fakeQuery, {}, 9) === null).toBeTruthy()
+            })
         })
 
-        test('query parameter should be an array of instances of Query', () => {
-            expect(() => {
-                db.findAll([9])
-            }).toThrow()
-        })
-
-        test('cb parameter should be of type function or undefined', () => {
-            expect(() => {
-                db.findAll(new Query(), 9)
-            }).toThrow()
+        describe('Common find* errors', () => {
+            test('query parameter should be instance of Query', () => {
+                expect(() => {
+                    db.findAll(9)
+                }).toThrow()
+            })
+    
+            test('query parameter should be an array of instances of Query', () => {
+                expect(() => {
+                    db.findAll([9])
+                }).toThrow()
+            })
+    
+            test('cb parameter should be of type function or undefined', () => {
+                expect(() => {
+                    db.findAll(fakeQuery, 9)
+                }).toThrow()
+            })
         })
     })
 })
