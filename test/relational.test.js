@@ -1,5 +1,5 @@
 const fs = require('fs')
-const jsimdb = require('../')
+const jsldb = require('../')
 const Query = require('../src/query')
 const path = require('path')
 const faker = require('faker')
@@ -66,14 +66,14 @@ let db
 
 describe('Creation, saving, and connection', () => {
     test('Create new database', () => {
-        db = jsimdb.relational('test', passingSchemas)
+        db = jsldb.relational('test', passingSchemas)
         expect(db).toBeTruthy()
     })
 
     test('Creation errors', () => {
         for (var bad in failingSchemas) {
             try {
-                const _ = jsimdb.relational('bad', failingSchemas[bad])
+                jsldb.relational('bad', failingSchemas[bad])
             } catch (e) {
                 expect(e).toBeDefined()
             }
@@ -85,7 +85,7 @@ describe('Creation, saving, and connection', () => {
     })
 
     test('Connect to existing database', () => {
-        db = jsimdb.relational('test', passingSchemas)
+        db = jsldb.relational('test', passingSchemas)
         expect(db).toBeTruthy()
     })
 })
@@ -342,6 +342,17 @@ describe('Queries', () => {
             )
         })
 
+        test('findall - lt: number (multiple results)', (done) => {
+            db.findAll(
+                new Query('table1', 'number', 'lt', 200),
+                (err, entries) => {
+                    expect(err).toBeNull()
+                    expect(Object.size(entries)).toBe(2)
+                    done()
+                }
+            )
+        })
+
         test('findAll - gte: number', (done) => {
             db.findAll(
                 new Query('table1', 'number', 'gte', 42),
@@ -430,13 +441,49 @@ describe('Queries', () => {
         })
     })
 
+    describe('find1', () => {
+        test('find1 should return an object with 1 member', (done) => {
+            const res = db.find1(
+                new Query('table1', 'number', 'lt', 200),
+                (err, entry) => {
+                    expect(err).toBeDefined()
+                    expect(Object.size(entry)).toEqual(1)
+                    done()
+                }
+            )
+            expect(Object.size(res)).toEqual(1)
+        })
+    })
+
     describe('find Errors', () => {
         const fakeQuery = new Query('table1', 'number', 'eq', 42)
+        const optionsTemplate = [
+            ['n', 'Infinity'],
+            ['queryType', 'AND']
+        ]
 
         describe('find() parameter tests', () => {
             test('second paramater can be an object or a function', () => {
-                expect(db.find(fakeQuery, 9) === null).toBeTruthy()
-                expect(db.find(fakeQuery, {}, 9) === null).toBeTruthy()
+                expect(() => {
+                    db.find(fakeQuery, 9)
+                }).toThrow()
+                expect(() => {
+                    db.find(fakeQuery, {}, 9)
+                }).toThrow()
+            })
+            test('callback parameter should be function type', () => {
+                expect(() => {
+                    db.find(fakeQuery, {}, 9)
+                }).toThrow()
+            })
+
+            describe('if second parameter is an object, does it fill missing ones?', () => {
+                const opt = Object.fromEntries(optionsTemplate)
+                opt.queryType = undefined
+                test('options.queryType', () => {
+                    db.find(fakeQuery, opt)
+                    expect(opt).toMatchObject(Object.fromEntries(optionsTemplate))
+                })
             })
         })
 
@@ -445,17 +492,26 @@ describe('Queries', () => {
                 expect(() => {
                     db.findAll(9)
                 }).toThrow()
+                expect(() => {
+                    db.find1(9)
+                }).toThrow()
             })
 
             test('query parameter should be an array of instances of Query', () => {
                 expect(() => {
                     db.findAll([9])
                 }).toThrow()
+                expect(() => {
+                    db.find1([9])
+                })
             })
 
             test('cb parameter should be of type function or undefined', () => {
                 expect(() => {
                     db.findAll(fakeQuery, 9)
+                }).toThrow()
+                expect(() => {
+                    db.find1(fakeQuery, 9)
                 }).toThrow()
             })
         })
@@ -463,7 +519,7 @@ describe('Queries', () => {
 })
 
 describe('delete operations', () => {
-    test('Delete by id', (done) => {
+    test('deleteById', (done) => {
         db.deleteById('table1', t1EntryId, (err) => {
             if (err) done(err)
             db.deleteById('table1', t1Entry2Id, (err) => {
@@ -478,18 +534,24 @@ describe('delete operations', () => {
         })
     })
 
-    test('Delete by id (non-existent)', (done) => {
+    test('deleteById (non-existent)', (done) => {
         db.deleteById('table1', '0', (err) => {
             expect(err).toBeDefined()
             done()
         })
+    })
+
+    test('deleteById cb parameter should be function type', () => {
+        expect(() => {
+            db.deleteById('table1', t1EntryId, 0)
+        }).toThrow()
     })
 })
 
 describe('Faker', () => {
     test('Faker', () => {
         const fakeQuant = 1000
-        const fakeDB = jsimdb.relational('fake', {
+        const fakeDB = jsldb.relational('fake', {
             people: {
                 name: {
                     type: 'string',

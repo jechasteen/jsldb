@@ -17,7 +17,7 @@
         "dictionaries": ["jsdoc", "closure"]
     },
     "templates": {
-        "referenceTitle": "jsimdb",
+        "referenceTitle": "jsldb",
         "disableSort": false,
         "collapse": true,
         "resources": {

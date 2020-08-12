@@ -5,7 +5,8 @@ db.find([
     new Query('tablename', 'fieldname1', 'eq', 'John'),
     new Query('tablename' 'fieldname2', 'gt', 42)
 ], {
-    caseSensitive: true
+    queryType: 'OR',
+    n: 2
 }, (err, entries) => {
     if (err)
 })
@@ -40,8 +41,7 @@ Never {} or undefined.
 |find|`AND`|Alias for `findAll`|
 |findAll|`AND`|Returns all|
 |findAny|`OR`|Returns all|
-|findAnyN|`OR`|Returns the first N|
-|findAnyOne|`OR`|Returns the first|
+|findAny1|`OR`|Returns the first|
 |findById|N/A|Exception to the query rule, see below|
 |findN|`AND`|Returns the first N|
 |find1|`AND`|Returns the first|
@@ -52,11 +52,8 @@ In the case of `findById`, instead of a query object you only need to pass a UUI
 
 In order to provide more flexibility, the `find()` method allows an options object to customize the search. This allows you to either hard code the query function, or to determine it at run time.
 
-Note: some of these options are supported only for specified query functions. If an unsupported option is passed, the search will continue as if it had not been.
-
 |name|type|default|description|
 |-|-|-|-|
-|caseSensitive|boolean|false|whether or not to match case|
 |n|number|-1|for `findN` and `findAnyN` queries only, how many items to find. -1 returns all. 0 returns null.
 |queryFunction|string|'all'|selects the query function to call. the string is the function name, dropping 'find', e.g. 'anyOne'
 
@@ -76,14 +73,15 @@ db.findAll(
 )
 ```
 
-or maybe you want any employees with '@gmail.com' or '@live.com' email adresses 
+or maybe you want any 5 employees with '@gmail.com' or '@live.com' email adresses 
 
 ```javascript
-db.findAny(
+db.find(
     new Query('employees', 'email', 'regex', RegExp(/.+@((gmail)|(live)).com/g)),
+    { n: 5 },
     (err, entries) => {
         if (err) console.log(err)
+        res.render('page', { emails: entries })
     }
-    res.render('page', { emails: entries })
 )
 ```

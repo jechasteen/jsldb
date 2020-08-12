@@ -1,18 +1,18 @@
 {
-  "name": "jsimdb",
-  "version": "0.0.8",
-  "description": "JavaScript In-Memory Database",
+  "name": "jsldb",
+  "version": "0.0.9",
+  "description": "JavaScript Local Database",
   "main": "index.js",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
-    "test": "node_modules/.bin/jest --coverage",
+    "test": "node_modules/.bin/jest --no-cache --coverage",
     "docs": "node_modules/.bin/jsdoc -c .jsdoc.json -u docs/tutorials/ --verbose"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jechasteen/jsimdb.git"
+    "url": "git+https://github.com/jechasteen/jsldb.git"
   },
   "keywords": [
     "JavaScript",
@@ -24,9 +24,9 @@
   "author": "Jonathan Chasteen <jonathan.chasteen@live.com>",
   "license": "BSD",
   "bugs": {
-    "url": "https://github.com/jechasteen/jsimdb/issues"
+    "url": "https://github.com/jechasteen/jsldb/issues"
   },
-  "homepage": "https://jechasteen.github.io/jsimdb",
+  "homepage": "https://jechasteen.github.io/jsldb",
   "devDependencies": {
     "codecov": "^3.7.2",
     "eslint": "^7.6.0",
