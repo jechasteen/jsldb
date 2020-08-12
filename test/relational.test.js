@@ -453,14 +453,14 @@ describe('Queries', () => {
             )
             expect(Object.size(res)).toEqual(1)
         })
-        test('findOne ')
     })
 
     describe('find Errors', () => {
         const fakeQuery = new Query('table1', 'number', 'eq', 42)
-        const defaultOptions = {
-            queryType: 'all'
-        }
+        const optionsTemplate = [
+            ['n', 'Infinity'],
+            ['queryType', 'AND']
+        ]
 
         describe('find() parameter tests', () => {
             test('second paramater can be an object or a function', () => {
@@ -478,12 +478,11 @@ describe('Queries', () => {
             })
 
             describe('if second parameter is an object, does it fill missing ones?', () => {
-                const opt = Object.create(defaultOptions)
+                const opt = Object.fromEntries(optionsTemplate)
                 opt.queryType = undefined
                 test('options.queryType', () => {
-                    console.log(typeof opt)
                     db.find(fakeQuery, opt)
-                    expect(opt).toEqual(defaultOptions)
+                    expect(opt).toMatchObject(Object.fromEntries(optionsTemplate))
                 })
             })
         })

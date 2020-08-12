@@ -237,46 +237,92 @@ module.exports = function (name, schema, options) {
         if (options && (typeof options !== 'object' && typeof options !== 'function')) {
             throw new Error('Second parameter to find was neither an Options object or a callback function.')
         }
-        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to find must be function type.')
+        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to find* must be function type.')
         if (!options || !options.queryType) {
             if (!options) options = {}
         }
         if (!options.queryType) {
-            options.queryType = 'all'
+            options.queryType = 'AND'
+        }
+        if (!options.n) {
+            options.n = Infinity
         }
 
         if (options.queryType === 'id' && typeof query === 'string' && typeof options === 'string') {
             return findById(query, options, cb)
-        } else if (options.queryType === 'all') {
-            return findAll(query, cb)
         } else {
-            throw new Error(`options.queryType = ${options.queryType} is not supported`)
+            let ret = {}
+            let found = execQuery(query)
+            if (!found) ret = null
+
+            if (found.length === 1) {
+                if (options.n === Infinity) {
+                    ret = convertEntryArrayToObject(query, found[0])
+                } else {
+                    ret = convertEntryArrayToObject(query, found[0].slice(0, options.n))
+                }
+            } else if (found.length > 1) {
+                query = query[0]
+                if (options.queryType === 'AND') {
+                    found = AND(found)
+                } else if (options.queryType === 'OR') {
+                    found = OR(found)
+                }
+                if (options.n === Infinity) {
+                    ret = convertEntryArrayToObject(query, found)
+                } else {
+                    ret = convertEntryArrayToObject(query, found.slice(0, options.n))
+                }
+            }
+            if (typeof cb === 'function') cb(null, ret)
+            return ret
         }
     }
 
-    function execQuery (query, cb) {
-        try {
-            if (typeof cb !== 'function' && cb !== undefined) {
-                throw new TypeError('Second parameter to find* must be function type.')
-            }
-            const found = []
-            if (query instanceof Query) {
-                found.push(search(db.tables[query.table], query.field, query.fn, query.val))
-            } else if (query instanceof Array) {
-                for (var q in query) {
-                    if (!query[q] || !(query[q] instanceof Query)) {
-                        throw new Error('Queries must be instances of the Query object.')
+    function AND (arr) {
+        const common = []
+        while (arr.length > 1) {
+            for (var i in arr[0]) {
+                for (var j in arr[1]) {
+                    if (arr[0][i] === arr[1][j] && common.indexOf(arr[0][i] === -1)) {
+                        common.push(arr[0][i])
                     }
-                    found.push(search(db.tables[query[q].table], query[q].field, query[q].fn, query[q].val))
                 }
-            } else {
-                throw new Error('Query parameter must be either an array of Query objects, or a single Query object.')
             }
-            if (found.length === 0) return null
-            else return found
-        } catch (e) {
-            throw new Error('Failed to parse query: ' + e)
+            arr.shift()
+            arr[0] = common
         }
+        return common
+    }
+
+    function OR (arr) {
+        const all = []
+        for (var i in arr) {
+            for (var j in arr[i]) {
+                if (all.indexOf(arr[i][j]) === -1) {
+                    all.push(arr[i][j])
+                }
+            }
+        }
+        return all
+    }
+
+    function execQuery (query) {
+        const found = []
+        if (query instanceof Query) {
+            found.push(search(db.tables[query.table], query.field, query.fn, query.val))
+        } else if (query instanceof Array) {
+            for (var q in query) {
+                if (!query[q] || !(query[q] instanceof Query)) {
+                    throw new Error('Queries must be instances of the Query object.')
+                }
+                found.push(search(db.tables[query[q].table], query[q].field, query[q].fn, query[q].val))
+            }
+        } else {
+            throw new Error('Query parameter must be either an array of Query objects, or a single Query object.')
+        }
+        if (found.length === 0) return null
+        else return found
     }
 
     function convertEntryArrayToObject (query, ids) {
@@ -294,32 +340,7 @@ module.exports = function (name, schema, options) {
      * @returns {Object} The found entries or null, if not found
      */
     function findAll (query, cb) {
-        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to findAll must be function type')
-        const found = execQuery(query, cb)
-        if (!found) return cb(null, null)
-
-        let ret = {}
-        if (found.length === 1) {
-            ret = convertEntryArrayToObject(query, found[0])
-        } else if (found.length > 1) {
-            const common = []
-            while (found.length > 1) {
-                for (var i in found[0]) {
-                    for (var j in found[1]) {
-                        if (found[0][i] === found[1][j] && common.indexOf(found[0][i]) === -1) {
-                            common.push(found[0][i])
-                        }
-                    }
-                }
-                found.shift()
-                found[0] = common
-            }
-            ret = convertEntryArrayToObject(query[0], common)
-        } else {
-            ret = ret === {} ? null : ret
-        }
-        if (typeof cb === 'function') cb(null, ret)
-        return ret
+        return find(query, { queryType: 'AND' }, cb)
     }
 
     /**
@@ -329,29 +350,7 @@ module.exports = function (name, schema, options) {
      * @returns {Object} The found entries or null, if not found
      */
     function findAny (query, cb) {
-        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to findAny must be function type')
-        const found = execQuery(query, cb)
-        if (!found) return cb(null, null)
-
-        let ret = {}
-        if (found.length === 1) {
-            ret = convertEntryArrayToObject(query, found[0])
-        } else if (found.length > 1) {
-            const all = []
-            while (found.length > 0) {
-                for (var i in found[0]) {
-                    if (all.indexOf(found[0][i] === -1)) {
-                        all.push(found[0][i])
-                    }
-                }
-                found.shift()
-            }
-            ret = convertEntryArrayToObject(query[0], all)
-        } else {
-            ret = ret === {} ? null : ret
-        }
-        if (typeof cb === 'function') cb(null, ret)
-        return ret
+        return find(query, { queryType: 'OR' }, cb)
     }
 
     /**
@@ -374,39 +373,7 @@ module.exports = function (name, schema, options) {
     }
 
     function findOne (query, cb) {
-        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to findOne must be function type.')
-        const found = execQuery(query, cb, 1)
-        let ret = {}
-        if (typeof cb !== 'function') { throw new Error('Callback parameter to findOne does not have function type.') }
-        if (found.length === 1) {
-            ret[found[0]] = db.tables[query.table][found[0]]
-        } else if (found.length > 1) {
-            const found = []
-            for (var i in query) {
-                found.push(execQuery(query[i], cb))
-            }
-            if (found.length > 1) {
-                const temp = []
-                while (found.length > 1) {
-                    for (i in found[0]) {
-                        for (var j in found[1]) {
-                            if (found[0][i] === found[1][j]) {
-                                temp.push(found[0][i])
-                            }
-                        }
-                    }
-                    found.slice(0, 1)
-                    found[0] = temp
-                }
-                ret[found[0]] = db.tables[query[0].table][found[0]]
-            } else {
-                ret[found[0][0]] = db.tables[query[0].table][found[0][0]]
-            }
-        } else if (Object.size(ret) === 0) {
-            ret = null
-        }
-        cb(null, ret)
-        return ret
+        return find(query, { queryType: 'AND', n: 1 }, cb)
     }
 
     /**
