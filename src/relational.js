@@ -30,9 +30,9 @@ module.exports = function (name, schema, options) {
     db.path = undefined
     setPath()
     if (fs.existsSync(db.path)) {
-        connect()
+        if (!connect()) return null
     } else {
-        create()
+        if (!create()) return null
     }
 
     // Borrowed from faker sources because it's a fabulous method for javascript
@@ -136,19 +136,15 @@ module.exports = function (name, schema, options) {
      */
     function connect () {
         setPath()
-        if (fs.existsSync(db.path)) {
-            try {
-                db = JSON.parse(fs.readFileSync(db.path))
-                if (db.path) {
-                    return true
-                } else {
-                    return false
-                }
-            } catch (e) {
-                throw new Error(`Failed to load db from ${db.path}: ${e}`)
+        try {
+            db = JSON.parse(fs.readFileSync(db.path))
+            if (db.path) {
+                return true
+            } else {
+                return false
             }
-        } else {
-            throw new Error(`Database ${name} does not exist`)
+        } catch (e) {
+            throw new Error(`Failed to load db ${name}: ${e}`)
         }
     }
 
@@ -161,21 +157,17 @@ module.exports = function (name, schema, options) {
      */
     function create () {
         setPath()
-        if (fs.existsSync(db.path)) {
-            throw new Error(`Database ${name} already exists`)
-        } else {
-            verifyTables(schema, (err, data) => {
-                if (err) {
-                    throw err
-                } else {
-                    db.schemas = data
-                    db.tables = {}
-                    for (const key in data) {
-                        db.tables[key] = {}
-                    }
+        verifyTables(schema, (err, data) => {
+            if (err) {
+                throw err
+            } else {
+                db.schemas = data
+                db.tables = {}
+                for (const key in data) {
+                    db.tables[key] = {}
                 }
-            })
-        }
+            }
+        })
         return true
     }
 
@@ -186,7 +178,8 @@ module.exports = function (name, schema, options) {
      * @param {number} id - The id of the entry to be deleted
      * @param {callback} cb - A callback function (error?)
      */
-    function deleteById (table, id, cb = () => {}) {
+    function deleteById (table, id, cb) {
+        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to deleteById, if defined, must be function type')
         if (Object.prototype.hasOwnProperty.call(db.tables[table], id)) {
             delete db.tables[table][id]
             cb(null)
@@ -241,20 +234,23 @@ module.exports = function (name, schema, options) {
      */
     function find (query, options, cb) {
         if (typeof options === 'function') cb = options
-        if ((typeof options !== 'object' && typeof options !== 'function') ||
-            (typeof cb !== 'function' || !cb)) return null
+        if (options && (typeof options !== 'object' && typeof options !== 'function')) {
+            throw new Error('Second parameter to find was neither an Options object or a callback function.')
+        }
+        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to find must be function type.')
         if (!options || !options.queryType) {
             if (!options) options = {}
         }
         if (!options.queryType) {
             options.queryType = 'all'
         }
+
         if (options.queryType === 'id' && typeof query === 'string' && typeof options === 'string') {
             return findById(query, options, cb)
         } else if (options.queryType === 'all') {
             return findAll(query, cb)
         } else {
-            return null
+            throw new Error(`options.queryType = ${options.queryType} is not supported`)
         }
     }
 
@@ -279,8 +275,7 @@ module.exports = function (name, schema, options) {
             if (found.length === 0) return null
             else return found
         } catch (e) {
-            console.err('Failed to parse query: ' + e.text)
-            return null
+            throw new Error('Failed to parse query: ' + e)
         }
     }
 
@@ -299,14 +294,13 @@ module.exports = function (name, schema, options) {
      * @returns {Object} The found entries or null, if not found
      */
     function findAll (query, cb) {
+        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to findAll must be function type')
         const found = execQuery(query, cb)
         if (!found) return cb(null, null)
 
         let ret = {}
         if (found.length === 1) {
             ret = convertEntryArrayToObject(query, found[0])
-            cb(null, ret)
-            return ret
         } else if (found.length > 1) {
             const common = []
             while (found.length > 1) {
@@ -321,11 +315,11 @@ module.exports = function (name, schema, options) {
                 found[0] = common
             }
             ret = convertEntryArrayToObject(query[0], common)
-            cb(null, ret)
-            return ret
         } else {
-            return cb(null, null)
+            ret = ret === {} ? null : ret
         }
+        if (typeof cb === 'function') cb(null, ret)
+        return ret
     }
 
     /**
@@ -335,14 +329,13 @@ module.exports = function (name, schema, options) {
      * @returns {Object} The found entries or null, if not found
      */
     function findAny (query, cb) {
+        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to findAny must be function type')
         const found = execQuery(query, cb)
         if (!found) return cb(null, null)
 
         let ret = {}
         if (found.length === 1) {
             ret = convertEntryArrayToObject(query, found[0])
-            cb(null, ret)
-            return ret
         } else if (found.length > 1) {
             const all = []
             while (found.length > 0) {
@@ -354,11 +347,11 @@ module.exports = function (name, schema, options) {
                 found.shift()
             }
             ret = convertEntryArrayToObject(query[0], all)
-            cb(null, ret)
-            return ret
         } else {
-            return cb(null, null)
+            ret = ret === {} ? null : ret
         }
+        if (typeof cb === 'function') cb(null, ret)
+        return ret
     }
 
     /**
@@ -369,8 +362,8 @@ module.exports = function (name, schema, options) {
      * @param {function} cb - Callback function. (error?, foundEntry?)
      * @returns {object} - The object which was found, or, if not found, undefined;
      */
-    function findById (table, id, cb = () => {}) {
-        if (typeof cb !== 'function') { throw new Error('Callback parameter to findById does not have type function.') }
+    function findById (table, id, cb) {
+        if (cb && typeof cb !== 'function') { throw new Error('Callback parameter to findById must have function type.') }
         const found = db.tables[table][id]
         if (found) {
             cb(null, found)
@@ -378,6 +371,42 @@ module.exports = function (name, schema, options) {
             cb(new Error(`Entry (${table}:${id}) not found.`), id)
         }
         return found
+    }
+
+    function findOne (query, cb) {
+        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to findOne must be function type.')
+        const found = execQuery(query, cb, 1)
+        let ret = {}
+        if (typeof cb !== 'function') { throw new Error('Callback parameter to findOne does not have function type.') }
+        if (found.length === 1) {
+            ret[found[0]] = db.tables[query.table][found[0]]
+        } else if (found.length > 1) {
+            const found = []
+            for (var i in query) {
+                found.push(execQuery(query[i], cb))
+            }
+            if (found.length > 1) {
+                const temp = []
+                while (found.length > 1) {
+                    for (i in found[0]) {
+                        for (var j in found[1]) {
+                            if (found[0][i] === found[1][j]) {
+                                temp.push(found[0][i])
+                            }
+                        }
+                    }
+                    found.slice(0, 1)
+                    found[0] = temp
+                }
+                ret[found[0]] = db.tables[query[0].table][found[0]]
+            } else {
+                ret[found[0][0]] = db.tables[query[0].table][found[0][0]]
+            }
+        } else if (Object.size(ret) === 0) {
+            ret = null
+        }
+        cb(null, ret)
+        return ret
     }
 
     /**
@@ -402,7 +431,8 @@ module.exports = function (name, schema, options) {
      * @returns {boolean} - The result of the insertion operation. A check error if the check failed, or false if not.
      * @throws if the type check fails.
      */
-    function insert (table, entry, cb = () => {}) {
+    function insert (table, entry, cb) {
+        if (cb && typeof cb !== 'function') throw new Error('Callback passed to insert must be function type.')
         const schema = db.schemas[table]
 
         for (const k in entry) {
@@ -479,7 +509,8 @@ module.exports = function (name, schema, options) {
      * @param {function} cb - A callback to be run after the set operation. (error?, changedEntry?)
      * @returns {boolean} - The result of the set operation.
      */
-    function setFieldById (table, id, field, value, cb = () => {}) {
+    function setFieldById (table, id, field, value, cb) {
+        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to setFieldById must be function type')
         if (checkField(db.schemas[table][field].type, value)) {
             if (Object.prototype.hasOwnProperty.call(db.tables[table], id)) {
                 db.tables[table][id][field] = value
@@ -564,7 +595,7 @@ module.exports = function (name, schema, options) {
         // findAnyN: findAnyN,
         // findAnyOne: findAnyOne,
         // findN: findN,
-        // findOne: findOne,
+        findOne: findOne,
         getAllEntries: getAllEntries,
         insert: insert,
         path: function () { return db.path },
