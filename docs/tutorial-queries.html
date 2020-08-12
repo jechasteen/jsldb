@@ -107,7 +107,8 @@
     new Query('tablename', 'fieldname1', 'eq', 'John'),
     new Query('tablename' 'fieldname2', 'gt', 42)
 ], {
-    caseSensitive: true
+    queryType: 'OR',
+    n: 2
 }, (err, entries) => {
     if (err)
 })
@@ -184,12 +185,7 @@ Never {} or undefined.</p>
 <td>Returns all</td>
 </tr>
 <tr>
-<td>findAnyN</td>
-<td><code>OR</code></td>
-<td>Returns the first N</td>
-</tr>
-<tr>
-<td>findAnyOne</td>
+<td>findAny1</td>
 <td><code>OR</code></td>
 <td>Returns the first</td>
 </tr>
@@ -204,7 +200,7 @@ Never {} or undefined.</p>
 <td>Returns the first N</td>
 </tr>
 <tr>
-<td>findOne</td>
+<td>find1</td>
 <td><code>AND</code></td>
 <td>Returns the first</td>
 </tr>
@@ -213,7 +209,6 @@ Never {} or undefined.</p>
 <p>In the case of <code>findById</code>, instead of a query object you only need to pass a UUID that will match with a single entry.</p>
 <h2>Options</h2>
 <p>In order to provide more flexibility, the <code>find()</code> method allows an options object to customize the search. This allows you to either hard code the query function, or to determine it at run time.</p>
-<p>Note: some of these options are supported only for specified query functions. If an unsupported option is passed, the search will continue as if it had not been.</p>
 <table>
 <thead>
 <tr>
@@ -224,12 +219,6 @@ Never {} or undefined.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>caseSensitive</td>
-<td>boolean</td>
-<td>false</td>
-<td>whether or not to match case</td>
-</tr>
 <tr>
 <td>n</td>
 <td>number</td>
@@ -255,13 +244,14 @@ You want to find all employees with the name Jeff that don't have an email.</p>
     }
 )
 </code></pre>
-<p>or maybe you want any employees with '@gmail.com' or '@live.com' email adresses</p>
-<pre class="prettyprint source lang-javascript"><code>db.findAny(
+<p>or maybe you want any 5 employees with '@gmail.com' or '@live.com' email adresses</p>
+<pre class="prettyprint source lang-javascript"><code>db.find(
     new Query('employees', 'email', 'regex', RegExp(/.+@((gmail)|(live)).com/g)),
+    { n: 5 },
     (err, entries) => {
         if (err) console.log(err)
+        res.render('page', { emails: entries })
     }
-    res.render('page', { emails: entries })
 )
 </code></pre>
   </article>

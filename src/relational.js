@@ -227,7 +227,6 @@ module.exports = function (name, schema, options) {
      * @param {string} table - The name of the table to be queried
      * @param {Query|Query[]} query - An array composed of objects with `key: value` pairs to be matched. An empty object `{}` results in the whole table being returned.
      * @param {Object} options - Search options
-     * @param {boolean} options.caseSensitive - True for case sensitive search, default true
      * @param {number} options.n - Only for *N queries, the number of results to return
      * @param {string} options.queryType - The type of query to perform. One of: id, anyN, anyOne, all, one, n, any.
      * @param {function} cb - Callback function (error?, resultsObject)
@@ -372,7 +371,7 @@ module.exports = function (name, schema, options) {
         return found
     }
 
-    function findOne (query, cb) {
+    function find1 (query, cb) {
         return find(query, { queryType: 'AND', n: 1 }, cb)
     }
 
@@ -560,9 +559,9 @@ module.exports = function (name, schema, options) {
         findAll: findAll,
         findAny: findAny,
         // findAnyN: findAnyN,
-        // findAnyOne: findAnyOne,
+        // findAny1: findAny1,
         // findN: findN,
-        findOne: findOne,
+        find1: find1,
         getAllEntries: getAllEntries,
         insert: insert,
         path: function () { return db.path },
