@@ -82,7 +82,7 @@
       
     
 
-    <h3>Modules</h3><ul><li id="relational-nav"><a href="module-relational.html">relational</a><ul class='methods'><li data-type="method" id="relational-deleteById-nav"><a href="module-relational.html#~deleteById">deleteById</a></li><li data-type="method" id="relational-find-nav"><a href="module-relational.html#~find">find</a></li><li data-type="method" id="relational-findById-nav"><a href="module-relational.html#~findById">findById</a></li><li data-type="method" id="relational-getAllEntries-nav"><a href="module-relational.html#~getAllEntries">getAllEntries</a></li><li data-type="method" id="relational-insert-nav"><a href="module-relational.html#~insert">insert</a></li><li data-type="method" id="relational-save-nav"><a href="module-relational.html#~save">save</a></li><li data-type="method" id="relational-saveSync-nav"><a href="module-relational.html#~saveSync">saveSync</a></li><li data-type="method" id="relational-setFieldById-nav"><a href="module-relational.html#~setFieldById">setFieldById</a></li></ul></li></ul><h3 id="global-nav">Global</h3><ul><li><a href="global.html#Query">Query</a></li></ul>
+    <h3>Modules</h3><ul><li id="relational-nav"><a href="module-relational.html">relational</a><ul class='methods'><li data-type="method" id="relational-deleteById-nav"><a href="module-relational.html#~deleteById">deleteById</a></li><li data-type="method" id="relational-find-nav"><a href="module-relational.html#~find">find</a></li><li data-type="method" id="relational-findAll-nav"><a href="module-relational.html#~findAll">findAll</a></li><li data-type="method" id="relational-findAny-nav"><a href="module-relational.html#~findAny">findAny</a></li><li data-type="method" id="relational-findById-nav"><a href="module-relational.html#~findById">findById</a></li><li data-type="method" id="relational-getAllEntries-nav"><a href="module-relational.html#~getAllEntries">getAllEntries</a></li><li data-type="method" id="relational-insert-nav"><a href="module-relational.html#~insert">insert</a></li><li data-type="method" id="relational-save-nav"><a href="module-relational.html#~save">save</a></li><li data-type="method" id="relational-saveSync-nav"><a href="module-relational.html#~saveSync">saveSync</a></li><li data-type="method" id="relational-setFieldById-nav"><a href="module-relational.html#~setFieldById">setFieldById</a></li></ul></li></ul><h3 id="global-nav">Global</h3><ul><li><a href="global.html#Query">Query</a></li></ul>
   </nav>
 
   <div id="main">
@@ -421,7 +421,13 @@ If not specified, defaults to 'all' type search.
           
             
     <span class="param-type">
-      Object
+      <a href="global.html#Query">Query</a>
+    </span>
+
+    |
+
+    <span class="param-type">
+      Array.&lt;<a href="global.html#Query">Query</a>>
     </span>
 
     
@@ -694,6 +700,368 @@ If not specified, defaults to 'all' type search.
   
 
   <span class='name-container'>
+    <a class="link-icon" href="#~findAll">
+      <svg height="20" width="20" style="fill: black;">
+        <use xlink:href="#linkIcon"></use>
+      </svg>
+    </a>
+    <h4 class="name" id="~findAll">
+      <span class="type-signature">(inner) </span>findAll<span class="signature">(query, cb)</span><span class="type-signature"> &rarr; {Object}</span>
+    </h4>
+  </span>
+
+  
+
+
+
+  <div class="description">
+    Find all matching entries, using AND logic for multiple conditions
+  </div>
+
+
+
+
+
+
+
+  <h5>Parameters:</h5>
+  
+
+<table class="params">
+  <thead>
+    <tr>
+      
+        <th>Name</th>
+      
+
+      <th>Type</th>
+
+      
+
+      
+
+      <th class="last">Description</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    
+      <tr>
+        
+          <td class="name"><code>query</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      <a href="global.html#Query">Query</a>
+    </span>
+
+    |
+
+    <span class="param-type">
+      Array.&lt;<a href="global.html#Query">Query</a>>
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+
+        
+
+        <td class="description last">
+          Query or Queries
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>cb</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      function
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+
+        
+
+        <td class="description last">
+          Callback (err, entries)
+          
+        </td>
+      </tr>
+
+    
+  </tbody>
+</table>
+
+
+
+
+
+<dl class="details">
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source">
+      <ul class="dummy">
+        <li>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line301">line 301</a>
+        </li>
+      </ul>
+    </dd>
+  
+
+  
+
+  
+
+  
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+        
+
+
+  
+
+  <span class='name-container'>
+    <a class="link-icon" href="#~findAny">
+      <svg height="20" width="20" style="fill: black;">
+        <use xlink:href="#linkIcon"></use>
+      </svg>
+    </a>
+    <h4 class="name" id="~findAny">
+      <span class="type-signature">(inner) </span>findAny<span class="signature">(query, cb)</span><span class="type-signature"> &rarr; {Object}</span>
+    </h4>
+  </span>
+
+  
+
+
+
+  <div class="description">
+    Find all matching entries, using OR logic for multiple conditions
+  </div>
+
+
+
+
+
+
+
+  <h5>Parameters:</h5>
+  
+
+<table class="params">
+  <thead>
+    <tr>
+      
+        <th>Name</th>
+      
+
+      <th>Type</th>
+
+      
+
+      
+
+      <th class="last">Description</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    
+      <tr>
+        
+          <td class="name"><code>query</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      <a href="global.html#Query">Query</a>
+    </span>
+
+    |
+
+    <span class="param-type">
+      Array.&lt;<a href="global.html#Query">Query</a>>
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+
+        
+
+        <td class="description last">
+          Query or Queries
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>cb</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      function
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+
+        
+
+        <td class="description last">
+          Callback (err, entries)
+          
+        </td>
+      </tr>
+
+    
+  </tbody>
+</table>
+
+
+
+
+
+<dl class="details">
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source">
+      <ul class="dummy">
+        <li>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line337">line 337</a>
+        </li>
+      </ul>
+    </dd>
+  
+
+  
+
+  
+
+  
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+        
+
+
+  
+
+  <span class='name-container'>
     <a class="link-icon" href="#~findById">
       <svg height="20" width="20" style="fill: black;">
         <use xlink:href="#linkIcon"></use>
@@ -865,7 +1233,7 @@ If not specified, defaults to 'all' type search.
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line360">line 360</a>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line372">line 372</a>
         </li>
       </ul>
     </dd>
@@ -1011,7 +1379,7 @@ If not specified, defaults to 'all' type search.
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line377">line 377</a>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line389">line 389</a>
         </li>
       </ul>
     </dd>
@@ -1216,7 +1584,7 @@ The `_id` is a UUID and is created automatically.
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line393">line 393</a>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line405">line 405</a>
         </li>
       </ul>
     </dd>
@@ -1388,7 +1756,7 @@ The `_id` is a UUID and is created automatically.
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line422">line 422</a>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line434">line 434</a>
         </li>
       </ul>
     </dd>
@@ -1479,7 +1847,7 @@ The `_id` is a UUID and is created automatically.
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line440">line 440</a>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line452">line 452</a>
         </li>
       </ul>
     </dd>
@@ -1741,7 +2109,7 @@ The `_id` is a UUID and is created automatically.
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line470">line 470</a>
+          <a href="relational.js.html">relational.js</a>, <a href="relational.js.html#line482">line 482</a>
         </li>
       </ul>
     </dd>

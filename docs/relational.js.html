@@ -84,7 +84,7 @@
       
     
 
-    <h3>Modules</h3><ul><li id="relational-nav"><a href="module-relational.html">relational</a><ul class='methods'><li data-type="method" id="relational-deleteById-nav"><a href="module-relational.html#~deleteById">deleteById</a></li><li data-type="method" id="relational-find-nav"><a href="module-relational.html#~find">find</a></li><li data-type="method" id="relational-findById-nav"><a href="module-relational.html#~findById">findById</a></li><li data-type="method" id="relational-getAllEntries-nav"><a href="module-relational.html#~getAllEntries">getAllEntries</a></li><li data-type="method" id="relational-insert-nav"><a href="module-relational.html#~insert">insert</a></li><li data-type="method" id="relational-save-nav"><a href="module-relational.html#~save">save</a></li><li data-type="method" id="relational-saveSync-nav"><a href="module-relational.html#~saveSync">saveSync</a></li><li data-type="method" id="relational-setFieldById-nav"><a href="module-relational.html#~setFieldById">setFieldById</a></li></ul></li></ul><h3 id="global-nav">Global</h3><ul><li><a href="global.html#Query">Query</a></li></ul>
+    <h3>Modules</h3><ul><li id="relational-nav"><a href="module-relational.html">relational</a><ul class='methods'><li data-type="method" id="relational-deleteById-nav"><a href="module-relational.html#~deleteById">deleteById</a></li><li data-type="method" id="relational-find-nav"><a href="module-relational.html#~find">find</a></li><li data-type="method" id="relational-findAll-nav"><a href="module-relational.html#~findAll">findAll</a></li><li data-type="method" id="relational-findAny-nav"><a href="module-relational.html#~findAny">findAny</a></li><li data-type="method" id="relational-findById-nav"><a href="module-relational.html#~findById">findById</a></li><li data-type="method" id="relational-getAllEntries-nav"><a href="module-relational.html#~getAllEntries">getAllEntries</a></li><li data-type="method" id="relational-insert-nav"><a href="module-relational.html#~insert">insert</a></li><li data-type="method" id="relational-save-nav"><a href="module-relational.html#~save">save</a></li><li data-type="method" id="relational-saveSync-nav"><a href="module-relational.html#~saveSync">saveSync</a></li><li data-type="method" id="relational-setFieldById-nav"><a href="module-relational.html#~setFieldById">setFieldById</a></li></ul></li></ul><h3 id="global-nav">Global</h3><ul><li><a href="global.html#Query">Query</a></li></ul>
   </nav>
 
   <div id="main">
@@ -101,8 +101,8 @@
   <article>
     <pre class="prettyprint source linenums"><code>const fs = require('fs')
 const path = require('path')
-const baseDir = path.dirname(require.main.filename)
 const Query = require('./query')
+const baseDir = path.dirname(require.main.filename)
 
 // Allows us to see if a find operation has any results
 if (!Object.size) {
@@ -333,7 +333,7 @@ module.exports = function (name, schema, options) {
      * @tutorial queries
      * @instance
      * @param {string} table - The name of the table to be queried
-     * @param {Object} query - An array composed of objects with `key: value` pairs to be matched. An empty object `{}` results in the whole table being returned.
+     * @param {Query|Query[]} query - An array composed of objects with `key: value` pairs to be matched. An empty object `{}` results in the whole table being returned.
      * @param {Object} options - Search options
      * @param {boolean} options.caseSensitive - True for case sensitive search, default true
      * @param {number} options.n - Only for *N queries, the number of results to return
@@ -350,8 +350,8 @@ module.exports = function (name, schema, options) {
         if (!options.queryType) {
             options.queryType = 'all'
         }
-        if (options.queryType === 'id' &amp;&amp; typeof query === 'string') {
-            return findById(table, query, cb)
+        if (options.queryType === 'id' &amp;&amp; typeof query === 'string' &amp;&amp; typeof options === 'string') {
+            return findById(query, options, cb)
         } else if (options.queryType === 'all') {
             return findAll(query, cb)
         } else {
@@ -359,42 +359,48 @@ module.exports = function (name, schema, options) {
         }
     }
 
-    function execQuery(query, cb) {
+    function execQuery (query, cb) {
         try {
             if (typeof cb !== 'function' &amp;&amp; cb !== undefined) {
-                throw 'Second parameter to find* must be function type.'
-            }            
-            let found = []
+                throw new TypeError('Second parameter to find* must be function type.')
+            }
+            const found = []
             if (query instanceof Query) {
                 found.push(search(db.tables[query.table], query.field, query.fn, query.val))
             } else if (query instanceof Array) {
                 for (var q in query) {
                     if (!query[q] || !(query[q] instanceof Query)) {
-                        throw 'Queries must be instances of the Query object.'
+                        throw new Error('Queries must be instances of the Query object.')
                     }
                     found.push(search(db.tables[query[q].table], query[q].field, query[q].fn, query[q].val))
                 }
             } else {
-                throw 'Query parameter must be either an array of Query objects, or a single Query object.'
+                throw new Error('Query parameter must be either an array of Query objects, or a single Query object.')
             }
             if (found.length === 0) return null
             else return found
         } catch (e) {
-            console.err('Failed to parse query: ' + e)
+            console.err('Failed to parse query: ' + e.text)
             return null
         }
     }
 
-    function convertEntryArrayToObject(query, ids) {
-        const ret = new Object()
+    function convertEntryArrayToObject (query, ids) {
+        const ret = {}
         for (var i in ids) {
             ret[ids[i]] = db.tables[query.table][ids[i]]
         }
         return Object.size(ret) === 0 ? null : ret
     }
 
+    /**
+     * Find all matching entries, using AND logic for multiple conditions
+     * @param {Query|Query[]} query Query or Queries
+     * @param {function} cb Callback (err, entries)
+     * @returns {Object} The found entries or null, if not found
+     */
     function findAll (query, cb) {
-        let found = execQuery(query, cb)
+        const found = execQuery(query, cb)
         if (!found) return cb(null, null)
 
         let ret = {}
@@ -403,7 +409,7 @@ module.exports = function (name, schema, options) {
             cb(null, ret)
             return ret
         } else if (found.length > 1) {
-            let common = [];
+            const common = []
             while (found.length > 1) {
                 for (var i in found[0]) {
                     for (var j in found[1]) {
@@ -423,8 +429,14 @@ module.exports = function (name, schema, options) {
         }
     }
 
+    /**
+     * Find all matching entries, using OR logic for multiple conditions
+     * @param {Query|Query[]} query Query or Queries
+     * @param {function} cb Callback (err, entries)
+     * @returns {Object} The found entries or null, if not found
+     */
     function findAny (query, cb) {
-        let found = execQuery(query, cb)
+        const found = execQuery(query, cb)
         if (!found) return cb(null, null)
 
         let ret = {}
@@ -433,7 +445,7 @@ module.exports = function (name, schema, options) {
             cb(null, ret)
             return ret
         } else if (found.length > 1) {
-            let all = []
+            const all = []
             while (found.length > 0) {
                 for (var i in found[0]) {
                     if (all.indexOf(found[0][i] === -1)) {
