@@ -44,7 +44,7 @@ Never {} or undefined.
 |findAnyOne|`OR`|Returns the first|
 |findById|N/A|Exception to the query rule, see below|
 |findN|`AND`|Returns the first N|
-|findOne|`AND`|Returns the first|
+|find1|`AND`|Returns the first|
 
 In the case of `findById`, instead of a query object you only need to pass a UUID that will match with a single entry.
 
