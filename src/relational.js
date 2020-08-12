@@ -17,9 +17,9 @@ if (!Object.size) {
 /**
  * @module relational
  * @example
- * let jsimdb = require('jsimdb').relational
- * let db1 = jsimdb('db1', db1schema)
- * let db2 = jsimdb('db2, db2schema);
+ * let jsldb = require('jsldb').relational
+ * let db1 = jsldb('db1', db1schema)
+ * let db2 = jsldb('db2, db2schema);
  * @param {string} name - The database's name. Must be unique.
  * @param {schema} schema - A Schema object that describes the table requirements.
  * @param {Object} options - Database optionals

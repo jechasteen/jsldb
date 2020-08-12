@@ -7,7 +7,7 @@ const IP = process.env.IP || '127.0.0.1'
 const path = require('path')
 
 //
-// Set up express, body-parser and jsimdb
+// Set up express, body-parser and jsldb
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
