@@ -441,9 +441,9 @@ describe('Queries', () => {
         })
     })
 
-    describe('findOne', () => {
-        test('findOne should return an object with 1 member', (done) => {
-            const res = db.findOne(
+    describe('find1', () => {
+        test('find1 should return an object with 1 member', (done) => {
+            const res = db.find1(
                 new Query('table1', 'number', 'lt', 200),
                 (err, entry) => {
                     expect(err).toBeDefined()
@@ -493,7 +493,7 @@ describe('Queries', () => {
                     db.findAll(9)
                 }).toThrow()
                 expect(() => {
-                    db.findOne(9)
+                    db.find1(9)
                 }).toThrow()
             })
 
@@ -502,7 +502,7 @@ describe('Queries', () => {
                     db.findAll([9])
                 }).toThrow()
                 expect(() => {
-                    db.findOne([9])
+                    db.find1([9])
                 })
             })
 
@@ -511,7 +511,7 @@ describe('Queries', () => {
                     db.findAll(fakeQuery, 9)
                 }).toThrow()
                 expect(() => {
-                    db.findOne(fakeQuery, 9)
+                    db.find1(fakeQuery, 9)
                 }).toThrow()
             })
         })
