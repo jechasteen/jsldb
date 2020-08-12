@@ -2,7 +2,6 @@ const fs = require('fs')
 const path = require('path')
 const Query = require('./query')
 const baseDir = path.dirname(require.main.filename)
-const Query = require('./query')
 
 // Allows us to see if a find operation has any results
 if (!Object.size) {
@@ -233,7 +232,7 @@ module.exports = function (name, schema, options) {
      * @tutorial queries
      * @instance
      * @param {string} table - The name of the table to be queried
-     * @param {Object} query - An array composed of objects with `key: value` pairs to be matched. An empty object `{}` results in the whole table being returned.
+     * @param {Query|Query[]} query - An array composed of objects with `key: value` pairs to be matched. An empty object `{}` results in the whole table being returned.
      * @param {Object} options - Search options
      * @param {boolean} options.caseSensitive - True for case sensitive search, default true
      * @param {number} options.n - Only for *N queries, the number of results to return
@@ -295,7 +294,7 @@ module.exports = function (name, schema, options) {
 
     /**
      * Find all matching entries, using AND logic for multiple conditions
-     * @param {Query|[Query]} query Query or Queries
+     * @param {Query|Query[]} query Query or Queries
      * @param {function} cb Callback (err, entries)
      * @returns {Object} The found entries or null, if not found
      */
@@ -331,7 +330,7 @@ module.exports = function (name, schema, options) {
 
     /**
      * Find all matching entries, using OR logic for multiple conditions
-     * @param {Query|[Query]} query Query or Queries
+     * @param {Query|Query[]} query Query or Queries
      * @param {function} cb Callback (err, entries)
      * @returns {Object} The found entries or null, if not found
      */
