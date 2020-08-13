@@ -8,7 +8,7 @@ jsldb is type safe, fast, and easy to use.
 jsldb is intended for rapid prototyping and other non-critical use-cases.
 Get functionality similar to mongoose without needing to spin up an instance.
 
-*NOTE: This project is currently a work in progress and, as such, will be under heavy development. Use at your own risk before version 0.1.0*
+*NOTE: This project is currently a work in progress and, as such, will be under heavy development. Use at your own risk before version 1.0.0*
 
 ## Getting Started
 
