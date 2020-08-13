@@ -2,7 +2,7 @@
     "opts": {
         "destination": "./docs/",
         "readme": "docs/intro.md",
-        "template": "node_modules/jsdoc-template"
+        "template": "node_modules/docdash"
     },
     "source": {
         "include": [
@@ -16,12 +16,20 @@
         "allowUnknownTags": true,
         "dictionaries": ["jsdoc", "closure"]
     },
+    "plugins": ["plugins/markdown"],
     "templates": {
         "referenceTitle": "jsldb",
-        "disableSort": false,
         "collapse": true,
         "resources": {
-            "Wikipedia": "https://en.wikipedia.org/wiki/Relational_database"
+            "Queries": "tutorial-queries.html",
+            "Schemas": "tutorial-schemas.html",
+            "Glossary": "tutorial-glossary.html"
         }
+    },
+    "docdash": {
+        "sort": false,
+        "sectionOrder": [
+            "Tutorials", "Modules", "Classes"
+        ]
     }
 }

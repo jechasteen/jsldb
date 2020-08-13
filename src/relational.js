@@ -14,16 +14,6 @@ if (!Object.size) {
     }
 }
 
-/**
- * @module relational
- * @example
- * let jsldb = require('jsldb').relational
- * let db1 = jsldb('db1', db1schema)
- * let db2 = jsldb('db2, db2schema);
- * @param {string} name - The database's name. Must be unique.
- * @param {schema} schema - A Schema object that describes the table requirements.
- * @param {Object} options - Database optionals
- */
 module.exports = function (name, schema, options) {
     const supportedTypes = ['number', 'string', 'date']
     let db = {}
@@ -47,13 +37,6 @@ module.exports = function (name, schema, options) {
         return RFC4122_TEMPLATE.replace(/[xy]/g, replacePlaceholders)
     }
 
-    /**
-     * Check the value against the given type
-     * @private
-     * @param {string} type - The type to be checked against
-     * @param {any} value - The value to check the type of
-     * @return {boolean | Error} - True if check passed, false if it failed. Check for instancof Error with its output!
-     */
     function checkField (type, value) {
         const validate = {
             number: (val) => {
@@ -129,11 +112,6 @@ module.exports = function (name, schema, options) {
         }
     }
 
-    /**
-     * Load an existing database file
-     * @private
-     * @throws if the database given does not exist
-     */
     function connect () {
         setPath()
         try {
@@ -148,13 +126,6 @@ module.exports = function (name, schema, options) {
         }
     }
 
-    /**
-     * Initialize a new database.
-     * This should be done with a new require() call for each database to be created.
-     * @private
-     * @throws if the database given already exists, or if table verification returns a check error.
-     * @returns {boolean} - true if the database creation completed successfully. Undefined otherwise.
-     */
     function create () {
         setPath()
         verifyTables(schema, (err, data) => {
@@ -171,13 +142,6 @@ module.exports = function (name, schema, options) {
         return true
     }
 
-    /**
-     * Delete an entry by id.
-     * @instance
-     * @param {string} table - The table to be targeted
-     * @param {number} id - The id of the entry to be deleted
-     * @param {callback} cb - A callback function (error?)
-     */
     function deleteById (table, id, cb) {
         if (cb && typeof cb !== 'function') throw new Error('Callback parameter to deleteById, if defined, must be function type')
         if (Object.prototype.hasOwnProperty.call(db.tables[table], id)) {
@@ -218,36 +182,23 @@ module.exports = function (name, schema, options) {
         return found
     }
 
-    /**
-     * Query a table using query object.
-     * You can call any of the other functions using options.queryType.
-     * If not specified, defaults to 'all' type search.
-     * @tutorial queries
-     * @instance
-     * @param {string} table - The name of the table to be queried
-     * @param {Query|Query[]} query - An array composed of objects with `key: value` pairs to be matched. An empty object `{}` results in the whole table being returned.
-     * @param {Object} options - Search options
-     * @param {number} options.n - Only for *N queries, the number of results to return
-     * @param {string} options.queryType - The type of query to perform. One of: id, anyN, anyOne, all, one, n, any.
-     * @param {function} cb - Callback function (error?, resultsObject)
-     */
     function find (query, options, cb) {
         if (typeof options === 'function') cb = options
         if (options && (typeof options !== 'object' && typeof options !== 'function')) {
             throw new Error('Second parameter to find was neither an Options object or a callback function.')
         }
         if (cb && typeof cb !== 'function') throw new Error('Callback parameter to find* must be function type.')
-        if (!options || !options.queryType) {
+        if (!options || !options.queryLogic) {
             if (!options) options = {}
         }
-        if (!options.queryType) {
-            options.queryType = 'AND'
+        if (!options.queryLogic) {
+            options.queryLogic = 'AND'
         }
         if (!options.n) {
             options.n = Infinity
         }
 
-        if (options.queryType === 'id' && typeof query === 'string' && typeof options === 'string') {
+        if (options.queryLogic === 'id' && typeof query === 'string' && typeof options === 'string') {
             return findById(query, options, cb)
         } else {
             let ret = {}
@@ -262,9 +213,9 @@ module.exports = function (name, schema, options) {
                 }
             } else if (found.length > 1) {
                 query = query[0]
-                if (options.queryType === 'AND') {
+                if (options.queryLogic === 'AND') {
                     found = AND(found)
-                } else if (options.queryType === 'OR') {
+                } else if (options.queryLogic === 'OR') {
                     found = OR(found)
                 }
                 if (options.n === Infinity) {
@@ -332,34 +283,22 @@ module.exports = function (name, schema, options) {
         return Object.size(ret) === 0 ? null : ret
     }
 
-    /**
-     * Find all matching entries, using AND logic for multiple conditions
-     * @param {Query|Query[]} query Query or Queries
-     * @param {function} cb Callback (err, entries)
-     * @returns {Object} The found entries or null, if not found
-     */
     function findAll (query, cb) {
-        return find(query, { queryType: 'AND' }, cb)
+        return find(query, { queryLogic: 'AND' }, cb)
     }
 
-    /**
-     * Find all matching entries, using OR logic for multiple conditions
-     * @param {Query|Query[]} query Query or Queries
-     * @param {function} cb Callback (err, entries)
-     * @returns {Object} The found entries or null, if not found
-     */
     function findAny (query, cb) {
-        return find(query, { queryType: 'OR' }, cb)
+        return find(query, { queryLogic: 'OR' }, cb)
     }
 
-    /**
-     * Fetch an entry by its id
-     * @instance
-     * @param {string} table - The table to be targeted
-     * @param {number} id - The id of the entry to be retrieved
-     * @param {function} cb - Callback function. (error?, foundEntry?)
-     * @returns {object} - The object which was found, or, if not found, undefined;
-     */
+    function findAny1 (query, cb) {
+        return find(query, { queryLogic: 'OR', n: 1 }, cb)
+    }
+
+    function findAnyN (n, query, cb) {
+        return find(query, { queryLogic: 'OR', n: n }, cb)
+    }
+
     function findById (table, id, cb) {
         if (cb && typeof cb !== 'function') { throw new Error('Callback parameter to findById must have function type.') }
         const found = db.tables[table][id]
@@ -371,32 +310,18 @@ module.exports = function (name, schema, options) {
         return found
     }
 
-    function find1 (query, cb) {
-        return find(query, { queryType: 'AND', n: 1 }, cb)
+    function findN (n, query, cb) {
+        return find(query, { queryLogic: 'AND', n: n }, cb)
     }
 
-    /**
-     * Get all entries in the named table
-     * @instance
-     * @param {string} table - The table name
-     * @returns {Object} - All entries in the named table
-     */
+    function find1 (query, cb) {
+        return find(query, { queryLogic: 'AND', n: 1 }, cb)
+    }
+
     function getAllEntries (table) {
         return db.tables[table]
     }
 
-    /**
-     * Add a new entry to a table.
-     * The `_id` is a UUID and is created automatically.
-     * @instance
-     * @example
-     * TODO
-     * @param {string} table - The name of the table to add to.
-     * @param {Object} entry - An object that conforms to the schema specified in the tables object
-     * @param {function} cb - Callback function (error?, newEntry?)
-     * @returns {boolean} - The result of the insertion operation. A check error if the check failed, or false if not.
-     * @throws if the type check fails.
-     */
     function insert (table, entry, cb) {
         if (cb && typeof cb !== 'function') throw new Error('Callback passed to insert must be function type.')
         const schema = db.schemas[table]
@@ -422,11 +347,6 @@ module.exports = function (name, schema, options) {
         return false
     }
 
-    /**
-     * Asynchronously write the database object in memory to file
-     * @instance @async
-     * @param {function} cb An optional callback with one parameter (error?) that runs after the write operation.
-     */
     function save (cb) {
         duplicateFileIfExists()
 
@@ -440,11 +360,6 @@ module.exports = function (name, schema, options) {
         }
     }
 
-    /**
-     * Synchronously write the database object in memory to file
-     * @instance
-     * @returns {boolean} - The result of the operation.
-     */
     function saveSync () {
         duplicateFileIfExists()
 
@@ -457,24 +372,10 @@ module.exports = function (name, schema, options) {
         }
     }
 
-    /**
-     * Set the path member according to the name parameter
-     * @private
-     */
     function setPath () {
         db.path = path.join(baseDir, `${name}.db.json`)
     }
 
-    /**
-     * Overwrite the value for an existing field in the entry matching id.
-     * @instance
-     * @param {string} table - The table to be searched
-     * @param {number} id - The id to be selected
-     * @param {string} field - The field to be overwritten
-     * @param {any} value - The value to be written. Must conform to schema.
-     * @param {function} cb - A callback to be run after the set operation. (error?, changedEntry?)
-     * @returns {boolean} - The result of the set operation.
-     */
     function setFieldById (table, id, field, value, cb) {
         if (cb && typeof cb !== 'function') throw new Error('Callback parameter to setFieldById must be function type')
         if (checkField(db.schemas[table][field].type, value)) {
@@ -492,13 +393,6 @@ module.exports = function (name, schema, options) {
         }
     }
 
-    /**
-     * Checks the fields object for errors. If successful, the first parameter passed will be true, and the second will contain
-     * a verified object. If it fails, it will return false as the first parameter, and the failed type text as a string.
-     * @private
-     * @param {object} inputTables - A schema object used to create and verify db entries. This object is passed to create()
-     * @param {function} cb - Function has the arguments (error?, verifiedTables?)
-     */
     function verifyTables (inputTables, cb) {
         const tables = []
         const tableNames = []
@@ -555,13 +449,13 @@ module.exports = function (name, schema, options) {
     return {
         deleteById: deleteById,
         find: find,
-        findById: findById,
+        find1: find1,
         findAll: findAll,
         findAny: findAny,
-        // findAnyN: findAnyN,
-        // findAny1: findAny1,
-        // findN: findN,
-        find1: find1,
+        findAny1: findAny1,
+        findAnyN: findAnyN,
+        findById: findById,
+        findN: findN,
         getAllEntries: getAllEntries,
         insert: insert,
         path: function () { return db.path },

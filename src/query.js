@@ -1,4 +1,5 @@
 /**
+ * @class Query
  * Create a new query object.
  * This is a convenience function that creates a new object with one key.
  * You could create the objects manually, it's just cumbersome and bulky
