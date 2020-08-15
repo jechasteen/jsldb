@@ -17,18 +17,19 @@ if (!Object.size) {
 module.exports = function (name, schema, options) {
     const supportedTypes = ['number', 'string', 'date']
     const _public = {}
+    const _private = {}
     let db = {}
     db.path = undefined
-    setPath()
-    if (fs.existsSync(db.path)) {
-        if (!connect()) return null
-    } else {
-        if (!create()) return null
+
+    function setPath () {
+        db.path = path.join(baseDir, `${name}.db.json`)
     }
+
+    setPath()
 
     // Borrowed from faker sources because it's a fabulous method for javascript
     // https://github.com/Marak/faker.js/blob/master/lib/random.js
-    const getUUID = function () {
+    _private.getUUID = () => {
         var RFC4122_TEMPLATE = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
         var replacePlaceholders = function (placeholder) {
             var random = Math.round(Math.random() * 15)
@@ -38,7 +39,7 @@ module.exports = function (name, schema, options) {
         return RFC4122_TEMPLATE.replace(/[xy]/g, replacePlaceholders)
     }
 
-    function checkField (type, value) {
+    _private.checkField = (type, value) => {
         const validate = {
             number: (val) => {
                 return typeof val === 'number'
@@ -47,7 +48,7 @@ module.exports = function (name, schema, options) {
                 return typeof val === 'string'
             },
             date: (val) => {
-                return val instanceof Date
+                return Date.parse(val) instanceof Date
             }
         }
         const s = type.split(' ')
@@ -108,7 +109,7 @@ module.exports = function (name, schema, options) {
         }
     }
 
-    function connect () {
+    _private.connect = () => {
         setPath()
         try {
             db = JSON.parse(fs.readFileSync(db.path))
@@ -122,9 +123,9 @@ module.exports = function (name, schema, options) {
         }
     }
 
-    function create () {
+    _private.create = () => {
         setPath()
-        verifyTables(schema, (err, data) => {
+        _private.verifyTables(schema, (err, data) => {
             if (err) {
                 throw err
             } else {
@@ -137,7 +138,8 @@ module.exports = function (name, schema, options) {
         })
         return true
     }
-    function AND (arr) {
+
+    _private.AND = (arr) => {
         const common = []
         while (arr.length > 1) {
             for (var i in arr[0]) {
@@ -153,7 +155,7 @@ module.exports = function (name, schema, options) {
         return common
     }
 
-    function OR (arr) {
+    _private.OR = (arr) => {
         const all = []
         for (var i in arr) {
             for (var j in arr[i]) {
@@ -165,16 +167,16 @@ module.exports = function (name, schema, options) {
         return all
     }
 
-    function execQuery (query) {
+    _private.execQuery = (query) => {
         const found = []
         if (query instanceof Query) {
-            found.push(search(db.tables[query.table], query.field, query.fn, query.val))
+            found.push(_private.search(db.tables[query.table], query.field, query.fn, query.val))
         } else if (query instanceof Array) {
             for (var q in query) {
                 if (!query[q] || !(query[q] instanceof Query)) {
                     throw new Error('Queries must be instances of the Query object.')
                 }
-                found.push(search(db.tables[query[q].table], query[q].field, query[q].fn, query[q].val))
+                found.push(_private.search(db.tables[query[q].table], query[q].field, query[q].fn, query[q].val))
             }
         } else {
             throw new Error('Query parameter must be either an array of Query objects, or a single Query object.')
@@ -183,7 +185,7 @@ module.exports = function (name, schema, options) {
         else return found
     }
 
-    function convertEntryArrayToObject (query, ids) {
+    _private.convertEntryArrayToObject = (query, ids) => {
         const ret = {}
         for (var i in ids) {
             ret[ids[i]] = db.tables[query.table][ids[i]]
@@ -191,13 +193,13 @@ module.exports = function (name, schema, options) {
         return Object.size(ret) === 0 ? null : ret
     }
 
-    function duplicateFileIfExists () {
+    _private.duplicateFileIfExists = () => {
         if (fs.existsSync(db.path)) {
             fs.copyFileSync(db.path, path.join(db.path + '.old'))
         }
     }
 
-    function search (table, field, matchFn, search) {
+    _private.search = (table, field, matchFn, search) => {
         const found = []
         for (var key in table) {
             const cur = table[key]
@@ -221,15 +223,15 @@ module.exports = function (name, schema, options) {
         return found
     }
 
-    const validateEntry = (table, entry) => {
+    _private.validateEntry = (table, entry) => {
         const schema = db.schemas[table]
         for (var field in schema) {
-            if (!checkField(schema[field].type, entry[field])) return false
+            if (!_private.checkField(schema[field].type, entry[field])) return false
         }
         return true
     }
 
-    function verifyTables (inputTables, cb) {
+    _private.verifyTables = (inputTables, cb) => {
         const tables = []
         const tableNames = []
 
@@ -312,26 +314,26 @@ module.exports = function (name, schema, options) {
             return _public.findById(query, options, cb)
         } else {
             let ret = {}
-            let found = execQuery(query)
+            let found = _private.execQuery(query)
             if (!found) ret = null
 
             if (found.length === 1) {
                 if (options.n === Infinity) {
-                    ret = convertEntryArrayToObject(query, found[0])
+                    ret = _private.convertEntryArrayToObject(query, found[0])
                 } else {
-                    ret = convertEntryArrayToObject(query, found[0].slice(0, options.n))
+                    ret = _private.convertEntryArrayToObject(query, found[0].slice(0, options.n))
                 }
             } else if (found.length > 1) {
                 query = query[0]
                 if (options.queryLogic === 'AND') {
-                    found = AND(found)
+                    found = _private.AND(found)
                 } else if (options.queryLogic === 'OR') {
-                    found = OR(found)
+                    found = _private.OR(found)
                 }
                 if (options.n === Infinity) {
-                    ret = convertEntryArrayToObject(query, found)
+                    ret = _private.convertEntryArrayToObject(query, found)
                 } else {
-                    ret = convertEntryArrayToObject(query, found.slice(0, options.n))
+                    ret = _private.convertEntryArrayToObject(query, found.slice(0, options.n))
                 }
             }
             if (typeof cb === 'function') cb(null, ret)
@@ -384,7 +386,7 @@ module.exports = function (name, schema, options) {
 
         for (const k in entry) {
             if (!schema[k]) cb(new Error(`Schema key ${k} has no type`), null)
-            const checkResult = checkField(schema[k].type, entry[k])
+            const checkResult = _private.checkField(schema[k].type, entry[k])
             if (checkResult instanceof Error) {
                 cb(checkResult, null)
                 return
@@ -395,7 +397,7 @@ module.exports = function (name, schema, options) {
             }
         }
 
-        const id = getUUID()
+        const id = _private.getUUID()
         db.tables[table][id] = entry
         db.tables[table][id]._id = id
 
@@ -404,7 +406,7 @@ module.exports = function (name, schema, options) {
     }
 
     _public.save = (cb) => {
-        duplicateFileIfExists()
+        _private.duplicateFileIfExists()
 
         const dbJSON = JSON.stringify(db)
         if (typeof cb === 'function') {
@@ -417,7 +419,7 @@ module.exports = function (name, schema, options) {
     }
 
     _public.saveSync = () => {
-        duplicateFileIfExists()
+        _private.duplicateFileIfExists()
 
         const dbJSON = JSON.stringify(db)
         fs.writeFileSync(db.path, dbJSON, { encoding: 'utf8' })
@@ -428,13 +430,9 @@ module.exports = function (name, schema, options) {
         }
     }
 
-    function setPath () {
-        db.path = path.join(baseDir, `${name}.db.json`)
-    }
-
     _public.setFieldById = (table, id, field, value, cb) => {
         if (cb && typeof cb !== 'function') throw new Error('Callback parameter to setFieldById must be function type')
-        if (checkField(db.schemas[table][field].type, value)) {
+        if (_private.checkField(db.schemas[table][field].type, value)) {
             if (Object.prototype.hasOwnProperty.call(db.tables[table], id)) {
                 db.tables[table][id][field] = value
                 cb(null, db.tables[table][id])
@@ -456,7 +454,7 @@ module.exports = function (name, schema, options) {
             let entry = db.tables[table][id]
             const savedEntry = Object.assign({}, entry)
             cb(null, db.tables[table][id])
-            if (!validateEntry(table, entry)) {
+            if (!_private.validateEntry(table, entry)) {
                 entry = savedEntry
                 throw new Error(`Failed to validate the entry -> ${entry}`)
             }
@@ -466,6 +464,14 @@ module.exports = function (name, schema, options) {
     _public.tables = () => { return db.tables }
     _public.schema = () => { return db.schema }
     _public.path = () => { return db.path }
+
+    _public.__test__ = _private
+
+    if (fs.existsSync(db.path)) {
+        if (!_private.connect()) return null
+    } else {
+        if (!_private.create()) return null
+    }
 
     return _public
 }

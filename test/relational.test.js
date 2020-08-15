@@ -648,9 +648,7 @@ describe('Faker', () => {
 
 afterAll(cleanup)
 
-process.on('exit', cleanup)
-
 function cleanup () {
-    fs.unlinkSync(tPath)
-    fs.unlinkSync(`${tPath}.old`)
+    if (fs.existsSync(tPath)) fs.unlinkSync(tPath)
+    if (fs.existsSync(`${tPath}.old`)) fs.unlinkSync(`${tPath}.old`)
 }
