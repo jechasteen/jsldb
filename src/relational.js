@@ -14,18 +14,9 @@ if (!Object.size) {
     }
 }
 
-/**
- * @module relational
- * @example
- * let jsldb = require('jsldb').relational
- * let db1 = jsldb('db1', db1schema)
- * let db2 = jsldb('db2, db2schema);
- * @param {string} name - The database's name. Must be unique.
- * @param {schema} schema - A Schema object that describes the table requirements.
- * @param {Object} options - Database optionals
- */
 module.exports = function (name, schema, options) {
     const supportedTypes = ['number', 'string', 'date']
+    const _public = {}
     let db = {}
     db.path = undefined
     setPath()
@@ -47,13 +38,6 @@ module.exports = function (name, schema, options) {
         return RFC4122_TEMPLATE.replace(/[xy]/g, replacePlaceholders)
     }
 
-    /**
-     * Check the value against the given type
-     * @private
-     * @param {string} type - The type to be checked against
-     * @param {any} value - The value to check the type of
-     * @return {boolean | Error} - True if check passed, false if it failed. Check for instancof Error with its output!
-     */
     function checkField (type, value) {
         const validate = {
             number: (val) => {
@@ -66,11 +50,6 @@ module.exports = function (name, schema, options) {
                 return val instanceof Date
             }
         }
-
-        if (!type || !value) {
-            return false
-        }
-
         const s = type.split(' ')
 
         if (s.length === 1) {
@@ -129,11 +108,6 @@ module.exports = function (name, schema, options) {
         }
     }
 
-    /**
-     * Load an existing database file
-     * @private
-     * @throws if the database given does not exist
-     */
     function connect () {
         setPath()
         try {
@@ -148,13 +122,6 @@ module.exports = function (name, schema, options) {
         }
     }
 
-    /**
-     * Initialize a new database.
-     * This should be done with a new require() call for each database to be created.
-     * @private
-     * @throws if the database given already exists, or if table verification returns a check error.
-     * @returns {boolean} - true if the database creation completed successfully. Undefined otherwise.
-     */
     function create () {
         setPath()
         verifyTables(schema, (err, data) => {
@@ -170,114 +137,6 @@ module.exports = function (name, schema, options) {
         })
         return true
     }
-
-    /**
-     * Delete an entry by id.
-     * @instance
-     * @param {string} table - The table to be targeted
-     * @param {number} id - The id of the entry to be deleted
-     * @param {callback} cb - A callback function (error?)
-     */
-    function deleteById (table, id, cb) {
-        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to deleteById, if defined, must be function type')
-        if (Object.prototype.hasOwnProperty.call(db.tables[table], id)) {
-            delete db.tables[table][id]
-            cb(null)
-        } else {
-            cb(new Error(`Table has no entry with id ${id}`))
-        }
-    }
-
-    function duplicateFileIfExists () {
-        if (fs.existsSync(db.path)) {
-            fs.copyFileSync(db.path, path.join(db.path + '.old'))
-        }
-    }
-
-    function search (table, field, matchFn, search) {
-        const found = []
-        for (var key in table) {
-            const cur = table[key]
-            if (typeof search === 'string' ||
-                    typeof search === 'number') {
-                if ((matchFn === 'eq' && cur[field] === search) ||
-                        (matchFn === 'gt' && cur[field] > search) ||
-                        (matchFn === 'lt' && cur[field] < search) ||
-                        (matchFn === 'gte' && cur[field] >= search) ||
-                        (matchFn === 'lte' && cur[field] <= search) ||
-                        (matchFn === 'contains' && cur[field] instanceof Array && cur[field].includes(search))) {
-                    found.push(key)
-                }
-            } else if (matchFn === 'regex' &&
-                    search instanceof RegExp &&
-                    typeof cur[field] === 'string' &&
-                    cur[field].match(search)) {
-                found.push(key)
-            }
-        }
-        return found
-    }
-
-    /**
-     * Query a table using query object.
-     * You can call any of the other functions using options.queryType.
-     * If not specified, defaults to 'all' type search.
-     * @tutorial queries
-     * @instance
-     * @param {string} table - The name of the table to be queried
-     * @param {Query|Query[]} query - An array composed of objects with `key: value` pairs to be matched. An empty object `{}` results in the whole table being returned.
-     * @param {Object} options - Search options
-     * @param {number} options.n - Only for *N queries, the number of results to return
-     * @param {string} options.queryType - The type of query to perform. One of: id, anyN, anyOne, all, one, n, any.
-     * @param {function} cb - Callback function (error?, resultsObject)
-     */
-    function find (query, options, cb) {
-        if (typeof options === 'function') cb = options
-        if (options && (typeof options !== 'object' && typeof options !== 'function')) {
-            throw new Error('Second parameter to find was neither an Options object or a callback function.')
-        }
-        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to find* must be function type.')
-        if (!options || !options.queryType) {
-            if (!options) options = {}
-        }
-        if (!options.queryType) {
-            options.queryType = 'AND'
-        }
-        if (!options.n) {
-            options.n = Infinity
-        }
-
-        if (options.queryType === 'id' && typeof query === 'string' && typeof options === 'string') {
-            return findById(query, options, cb)
-        } else {
-            let ret = {}
-            let found = execQuery(query)
-            if (!found) ret = null
-
-            if (found.length === 1) {
-                if (options.n === Infinity) {
-                    ret = convertEntryArrayToObject(query, found[0])
-                } else {
-                    ret = convertEntryArrayToObject(query, found[0].slice(0, options.n))
-                }
-            } else if (found.length > 1) {
-                query = query[0]
-                if (options.queryType === 'AND') {
-                    found = AND(found)
-                } else if (options.queryType === 'OR') {
-                    found = OR(found)
-                }
-                if (options.n === Infinity) {
-                    ret = convertEntryArrayToObject(query, found)
-                } else {
-                    ret = convertEntryArrayToObject(query, found.slice(0, options.n))
-                }
-            }
-            if (typeof cb === 'function') cb(null, ret)
-            return ret
-        }
-    }
-
     function AND (arr) {
         const common = []
         while (arr.length > 1) {
@@ -332,173 +191,44 @@ module.exports = function (name, schema, options) {
         return Object.size(ret) === 0 ? null : ret
     }
 
-    /**
-     * Find all matching entries, using AND logic for multiple conditions
-     * @param {Query|Query[]} query Query or Queries
-     * @param {function} cb Callback (err, entries)
-     * @returns {Object} The found entries or null, if not found
-     */
-    function findAll (query, cb) {
-        return find(query, { queryType: 'AND' }, cb)
+    function duplicateFileIfExists () {
+        if (fs.existsSync(db.path)) {
+            fs.copyFileSync(db.path, path.join(db.path + '.old'))
+        }
     }
 
-    /**
-     * Find all matching entries, using OR logic for multiple conditions
-     * @param {Query|Query[]} query Query or Queries
-     * @param {function} cb Callback (err, entries)
-     * @returns {Object} The found entries or null, if not found
-     */
-    function findAny (query, cb) {
-        return find(query, { queryType: 'OR' }, cb)
-    }
-
-    /**
-     * Fetch an entry by its id
-     * @instance
-     * @param {string} table - The table to be targeted
-     * @param {number} id - The id of the entry to be retrieved
-     * @param {function} cb - Callback function. (error?, foundEntry?)
-     * @returns {object} - The object which was found, or, if not found, undefined;
-     */
-    function findById (table, id, cb) {
-        if (cb && typeof cb !== 'function') { throw new Error('Callback parameter to findById must have function type.') }
-        const found = db.tables[table][id]
-        if (found) {
-            cb(null, found)
-        } else {
-            cb(new Error(`Entry (${table}:${id}) not found.`), id)
+    function search (table, field, matchFn, search) {
+        const found = []
+        for (var key in table) {
+            const cur = table[key]
+            if (typeof search === 'string' ||
+                    typeof search === 'number') {
+                if ((matchFn === 'eq' && cur[field] === search) ||
+                        (matchFn === 'gt' && cur[field] > search) ||
+                        (matchFn === 'lt' && cur[field] < search) ||
+                        (matchFn === 'gte' && cur[field] >= search) ||
+                        (matchFn === 'lte' && cur[field] <= search) ||
+                        (matchFn === 'contains' && cur[field] instanceof Array && cur[field].includes(search))) {
+                    found.push(key)
+                }
+            } else if (matchFn === 'regex' &&
+                    search instanceof RegExp &&
+                    typeof cur[field] === 'string' &&
+                    cur[field].match(search)) {
+                found.push(key)
+            }
         }
         return found
     }
 
-    function find1 (query, cb) {
-        return find(query, { queryType: 'AND', n: 1 }, cb)
-    }
-
-    /**
-     * Get all entries in the named table
-     * @instance
-     * @param {string} table - The table name
-     * @returns {Object} - All entries in the named table
-     */
-    function getAllEntries (table) {
-        return db.tables[table]
-    }
-
-    /**
-     * Add a new entry to a table.
-     * The `_id` is a UUID and is created automatically.
-     * @instance
-     * @example
-     * TODO
-     * @param {string} table - The name of the table to add to.
-     * @param {Object} entry - An object that conforms to the schema specified in the tables object
-     * @param {function} cb - Callback function (error?, newEntry?)
-     * @returns {boolean} - The result of the insertion operation. A check error if the check failed, or false if not.
-     * @throws if the type check fails.
-     */
-    function insert (table, entry, cb) {
-        if (cb && typeof cb !== 'function') throw new Error('Callback passed to insert must be function type.')
+    const validateEntry = (table, entry) => {
         const schema = db.schemas[table]
-
-        for (const k in entry) {
-            if (!schema[k]) cb(new Error(`Schema key ${k} has no type`), null)
-            const checkResult = checkField(schema[k].type, entry[k])
-            if (checkResult instanceof Error) {
-                cb(checkResult, null)
-                return
-            } else if (!checkResult) {
-                cb(new Error(`Type check failed: table ${table}, field ${schema[k]}, value ${entry[k]}`), null)
-            } else {
-                continue
-            }
+        for (var field in schema) {
+            if (!checkField(schema[field].type, entry[field])) return false
         }
-
-        const id = getUUID()
-        db.tables[table][id] = entry
-        db.tables[table][id]._id = id
-
-        cb(null, db.tables[table][id])
-        return false
+        return true
     }
 
-    /**
-     * Asynchronously write the database object in memory to file
-     * @instance @async
-     * @param {function} cb An optional callback with one parameter (error?) that runs after the write operation.
-     */
-    function save (cb) {
-        duplicateFileIfExists()
-
-        const dbJSON = JSON.stringify(db)
-        if (typeof cb === 'function') {
-            fs.writeFile(db.path, dbJSON, { encoding: 'utf8' }, cb)
-        } else {
-            fs.writeFile(db.path, dbJSON, { encoding: 'utf8' }, (err) => {
-                if (err) throw new Error(`Failed to save ${db.path}: err`)
-            })
-        }
-    }
-
-    /**
-     * Synchronously write the database object in memory to file
-     * @instance
-     * @returns {boolean} - The result of the operation.
-     */
-    function saveSync () {
-        duplicateFileIfExists()
-
-        const dbJSON = JSON.stringify(db)
-        fs.writeFileSync(db.path, dbJSON, { encoding: 'utf8' })
-        if (fs.existsSync(db.path)) {
-            return true
-        } else {
-            return false
-        }
-    }
-
-    /**
-     * Set the path member according to the name parameter
-     * @private
-     */
-    function setPath () {
-        db.path = path.join(baseDir, `${name}.db.json`)
-    }
-
-    /**
-     * Overwrite the value for an existing field in the entry matching id.
-     * @instance
-     * @param {string} table - The table to be searched
-     * @param {number} id - The id to be selected
-     * @param {string} field - The field to be overwritten
-     * @param {any} value - The value to be written. Must conform to schema.
-     * @param {function} cb - A callback to be run after the set operation. (error?, changedEntry?)
-     * @returns {boolean} - The result of the set operation.
-     */
-    function setFieldById (table, id, field, value, cb) {
-        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to setFieldById must be function type')
-        if (checkField(db.schemas[table][field].type, value)) {
-            if (Object.prototype.hasOwnProperty.call(db.tables[table], id)) {
-                db.tables[table][id][field] = value
-                cb(null, db.tables[table][id])
-            } else {
-                cb(new Error(`${id} does not exist in ${table}.`), null)
-                return false
-            }
-            return true
-        } else {
-            cb(new Error(`Field type check failed: (Field: ${field}, Value: ${value}, Type: ${db.schemas[table][field].type})`), null)
-            return false
-        }
-    }
-
-    /**
-     * Checks the fields object for errors. If successful, the first parameter passed will be true, and the second will contain
-     * a verified object. If it fails, it will return false as the first parameter, and the failed type text as a string.
-     * @private
-     * @param {object} inputTables - A schema object used to create and verify db entries. This object is passed to create()
-     * @param {function} cb - Function has the arguments (error?, verifiedTables?)
-     */
     function verifyTables (inputTables, cb) {
         const tables = []
         const tableNames = []
@@ -552,22 +282,190 @@ module.exports = function (name, schema, options) {
         cb(null, inputTables)
     }
 
-    return {
-        deleteById: deleteById,
-        find: find,
-        findById: findById,
-        findAll: findAll,
-        findAny: findAny,
-        // findAnyN: findAnyN,
-        // findAny1: findAny1,
-        // findN: findN,
-        find1: find1,
-        getAllEntries: getAllEntries,
-        insert: insert,
-        path: function () { return db.path },
-        save: save,
-        saveSync: saveSync,
-        setFieldById: setFieldById,
-        tables: function () { return db.tables }
+    _public.deleteById = (table, id, cb) => {
+        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to deleteById, if defined, must be function type')
+        if (Object.prototype.hasOwnProperty.call(db.tables[table], id)) {
+            delete db.tables[table][id]
+            cb(null)
+        } else {
+            cb(new Error(`Table has no entry with id ${id}`))
+        }
     }
+
+    _public.find = (query, options, cb) => {
+        if (typeof options === 'function') cb = options
+        if (options && (typeof options !== 'object' && typeof options !== 'function')) {
+            throw new Error('Second parameter to find was neither an Options object or a callback function.')
+        }
+        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to find* must be function type.')
+        if (!options || !options.queryLogic) {
+            if (!options) options = {}
+        }
+        if (!options.queryLogic) {
+            options.queryLogic = 'AND'
+        }
+        if (!options.n) {
+            options.n = Infinity
+        }
+
+        if (options.queryLogic === 'id' && typeof query === 'string' && typeof options === 'string') {
+            return _public.findById(query, options, cb)
+        } else {
+            let ret = {}
+            let found = execQuery(query)
+            if (!found) ret = null
+
+            if (found.length === 1) {
+                if (options.n === Infinity) {
+                    ret = convertEntryArrayToObject(query, found[0])
+                } else {
+                    ret = convertEntryArrayToObject(query, found[0].slice(0, options.n))
+                }
+            } else if (found.length > 1) {
+                query = query[0]
+                if (options.queryLogic === 'AND') {
+                    found = AND(found)
+                } else if (options.queryLogic === 'OR') {
+                    found = OR(found)
+                }
+                if (options.n === Infinity) {
+                    ret = convertEntryArrayToObject(query, found)
+                } else {
+                    ret = convertEntryArrayToObject(query, found.slice(0, options.n))
+                }
+            }
+            if (typeof cb === 'function') cb(null, ret)
+            return ret
+        }
+    }
+
+    _public.findAll = (query, cb) => {
+        return _public.find(query, { queryLogic: 'AND' }, cb)
+    }
+
+    _public.findAny = (query, cb) => {
+        return _public.find(query, { queryLogic: 'OR' }, cb)
+    }
+
+    _public.findAny1 = (query, cb) => {
+        return _public.find(query, { queryLogic: 'OR', n: 1 }, cb)
+    }
+
+    _public.findAnyN = (n, query, cb) => {
+        return _public.find(query, { queryLogic: 'OR', n: n }, cb)
+    }
+
+    _public.findById = (table, id, cb) => {
+        if (cb && typeof cb !== 'function') { throw new Error('Callback parameter to findById must have function type.') }
+        const found = db.tables[table][id]
+        if (found) {
+            cb(null, found)
+        } else {
+            cb(new Error(`Entry (${table}:${id}) not found.`), id)
+        }
+        return found
+    }
+
+    _public.findN = (n, query, cb) => {
+        return _public.find(query, { queryLogic: 'AND', n: n }, cb)
+    }
+
+    _public.find1 = (query, cb) => {
+        return _public.find(query, { queryLogic: 'AND', n: 1 }, cb)
+    }
+
+    _public.getAllEntries = (table) => {
+        return db.tables[table]
+    }
+
+    _public.insert = (table, entry, cb) => {
+        if (cb && typeof cb !== 'function') throw new Error('Callback passed to insert must be function type.')
+        const schema = db.schemas[table]
+
+        for (const k in entry) {
+            if (!schema[k]) cb(new Error(`Schema key ${k} has no type`), null)
+            const checkResult = checkField(schema[k].type, entry[k])
+            if (checkResult instanceof Error) {
+                cb(checkResult, null)
+                return
+            } else if (!checkResult) {
+                cb(new Error(`Type check failed: table ${table}, field ${schema[k]}, value ${entry[k]}`), null)
+            } else {
+                continue
+            }
+        }
+
+        const id = getUUID()
+        db.tables[table][id] = entry
+        db.tables[table][id]._id = id
+
+        cb(null, db.tables[table][id])
+        return false
+    }
+
+    _public.save = (cb) => {
+        duplicateFileIfExists()
+
+        const dbJSON = JSON.stringify(db)
+        if (typeof cb === 'function') {
+            fs.writeFile(db.path, dbJSON, { encoding: 'utf8' }, cb)
+        } else {
+            fs.writeFile(db.path, dbJSON, { encoding: 'utf8' }, (err) => {
+                if (err) throw new Error(`Failed to save ${db.path}: err`)
+            })
+        }
+    }
+
+    _public.saveSync = () => {
+        duplicateFileIfExists()
+
+        const dbJSON = JSON.stringify(db)
+        fs.writeFileSync(db.path, dbJSON, { encoding: 'utf8' })
+        if (fs.existsSync(db.path)) {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    function setPath () {
+        db.path = path.join(baseDir, `${name}.db.json`)
+    }
+
+    _public.setFieldById = (table, id, field, value, cb) => {
+        if (cb && typeof cb !== 'function') throw new Error('Callback parameter to setFieldById must be function type')
+        if (checkField(db.schemas[table][field].type, value)) {
+            if (Object.prototype.hasOwnProperty.call(db.tables[table], id)) {
+                db.tables[table][id][field] = value
+                cb(null, db.tables[table][id])
+            } else {
+                cb(new Error(`${id} does not exist in ${table}.`), null)
+                return false
+            }
+            return true
+        } else {
+            cb(new Error(`Field type check failed: (Field: ${field}, Value: ${value}, Type: ${db.schemas[table][field].type})`), null)
+            return false
+        }
+    }
+
+    _public.updateById = (table, id, cb) => {
+        if (typeof cb !== 'function') throw new Error('Callback parameter to updateById must be function type.')
+        if (Object.prototype.hasOwnProperty.call(db.tables, table) &&
+                Object.prototype.hasOwnProperty.call(db.tables[table], id)) {
+            let entry = db.tables[table][id]
+            const savedEntry = Object.assign({}, entry)
+            cb(null, db.tables[table][id])
+            if (!validateEntry(table, entry)) {
+                entry = savedEntry
+                throw new Error(`Failed to validate the entry -> ${entry}`)
+            }
+        }
+    }
+
+    _public.tables = () => { return db.tables }
+    _public.schema = () => { return db.schema }
+    _public.path = () => { return db.path }
+
+    return _public
 }

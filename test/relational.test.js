@@ -1,6 +1,6 @@
 const fs = require('fs')
 const jsldb = require('../')
-const Query = require('../src/query')
+const Query = jsldb.Query
 const path = require('path')
 const faker = require('faker')
 
@@ -441,8 +441,36 @@ describe('Queries', () => {
         })
     })
 
+    describe('findN type', () => {
+        test('findN should return number of entries matching n', (done) => {
+            db.findN(2,
+                new Query('table1', 'number', 'lt', 106),
+                (err, entries) => {
+                    expect(err).toBeNull()
+                    expect(entries[t1EntryId]).toEqual(t1Entry)
+                    expect(entries[t1Entry2Id]).toEqual(t1Entry2)
+                    expect(Object.size(entries)).toEqual(2)
+                    done()
+                })
+        })
+        test('findAnyN should return number of entries matching n', (done) => {
+            db.findAnyN(
+                2, [
+                    new Query('table1', 'number', 'gt', 42),
+                    new Query('table1', 'string', 'eq', 'hello')
+                ],
+                (err, entries) => {
+                    expect(err).toBeNull()
+                    expect(entries[t1EntryId]).toEqual(t1Entry)
+                    expect(entries[t1Entry2Id]).toEqual(t1Entry2)
+                    expect(Object.size(entries)).toEqual(2)
+                    done()
+                })
+        })
+    })
+
     describe('find1', () => {
-        test('find1 should return an object with 1 member', (done) => {
+        test('should return an object with 1 member', (done) => {
             const res = db.find1(
                 new Query('table1', 'number', 'lt', 200),
                 (err, entry) => {
@@ -459,7 +487,7 @@ describe('Queries', () => {
         const fakeQuery = new Query('table1', 'number', 'eq', 42)
         const optionsTemplate = [
             ['n', 'Infinity'],
-            ['queryType', 'AND']
+            ['queryLogic', 'AND']
         ]
 
         describe('find() parameter tests', () => {
@@ -479,8 +507,8 @@ describe('Queries', () => {
 
             describe('if second parameter is an object, does it fill missing ones?', () => {
                 const opt = Object.fromEntries(optionsTemplate)
-                opt.queryType = undefined
-                test('options.queryType', () => {
+                opt.queryLogic = undefined
+                test('options.queryLogic', () => {
                     db.find(fakeQuery, opt)
                     expect(opt).toMatchObject(Object.fromEntries(optionsTemplate))
                 })
@@ -514,6 +542,35 @@ describe('Queries', () => {
                     db.find1(fakeQuery, 9)
                 }).toThrow()
             })
+        })
+    })
+})
+
+describe('update operations', () => {
+    test('updateById', (done) => {
+        db.updateById('table1', t1EntryId, (err, entry) => {
+            if (err) done(err)
+            entry.string = 'newString'
+            db.findById('table1', t1EntryId, (err, entry) => {
+                if (err) done(err)
+                expect(entry.string).toEqual('newString')
+                done()
+            })
+        })
+    })
+
+    test('updateById error', (done) => {
+        expect(() => {
+            db.updateById('table1', t1EntryId, (err, entry) => {
+                if (err) done(err)
+                entry.string = 42
+            })
+        }).toThrow()
+
+        db.findById('table1', t1EntryId, (err, entry) => {
+            expect(err).toBeDefined()
+            expect(entry).toEqual(t1Entry)
+            done()
         })
     })
 })

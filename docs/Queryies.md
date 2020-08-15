@@ -2,8 +2,8 @@
 
 ```javascript
 db.find([
-    new Query('tablename', 'fieldname1', 'eq', 'John'),
-    new Query('tablename' 'fieldname2', 'gt', 42)
+    new Query('tablename', 'fieldname1', "eq", 'John'),
+    new Query('tablename' 'fieldname2', "gt", 42)
 ], {
     queryType: 'OR',
     n: 2
@@ -18,7 +18,7 @@ Note: you must instantiate a Query with `new`!
 ## Match Types
 
 |Function|Description|
-|----------|-----------|
+|--------|-----------|
 |eq|equal to|
 |gt|greater than|
 |lt|less than|
@@ -65,7 +65,7 @@ You want to find all employees with the name Jeff that don't have an email.
 
 ```javascript
 db.findAll(
-    new Query('employees', 'name', 'eq', 'Jeff'),
+    new Query('employees', 'name', "eq", 'Jeff'),
     (err, entries) => {
         if (err) console.log(err)
         res.render('page', { employeesNamedJeff: entries })
