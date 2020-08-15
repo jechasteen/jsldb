@@ -77,7 +77,7 @@ or maybe you want any 5 employees with '@gmail.com' or '@live.com' email adresse
 
 ```javascript
 db.find(
-    new Query('employees', 'email', "regex", RegExp(/.+@((gmail)|(live)).com/g)),
+    new Query('employees', 'email', 'regex', RegExp(/.+@((gmail)|(live)).com/g)),
     { n: 5 },
     (err, entries) => {
         if (err) console.log(err)
