@@ -1,6 +1,6 @@
 const fs = require('fs')
 const jsldb = require('../')
-const Query = require('../src/query')
+const Query = jsldb.Query
 const path = require('path')
 const faker = require('faker')
 
@@ -542,6 +542,35 @@ describe('Queries', () => {
                     db.find1(fakeQuery, 9)
                 }).toThrow()
             })
+        })
+    })
+})
+
+describe('update operations', () => {
+    test('updateById', (done) => {
+        db.updateById('table1', t1EntryId, (err, entry) => {
+            if (err) done(err)
+            entry.string = 'newString'
+            db.findById('table1', t1EntryId, (err, entry) => {
+                if (err) done(err)
+                expect(entry.string).toEqual('newString')
+                done()
+            })
+        })
+    })
+
+    test('updateById error', (done) => {
+        expect(() => {
+            db.updateById('table1', t1EntryId, (err, entry) => {
+                if (err) done(err)
+                entry.string = 42
+            })
+        }).toThrow()
+
+        db.findById('table1', t1EntryId, (err, entry) => {
+            expect(err).toBeDefined()
+            expect(entry).toEqual(t1Entry)
+            done()
         })
     })
 })
