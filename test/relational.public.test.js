@@ -131,32 +131,34 @@ describe('Entry insertion and modification', () => {
     })
 
     describe('Entry type check', () => {
-        test('Insert a broken entry (number)', (done) => {
+        test('Insert a broken entry (number)', () => {
             const entry = {
                 number: 'string',
                 string: 'string',
                 date: new Date(),
                 idLink: 'id table1'
             }
-            db.insert('table1', entry, (err, entry) => {
-                expect(err).toBeDefined()
-                expect(entry).toBeNull()
-                done()
-            })
+            expect(() => {
+                db.insert('table1', entry, (err, entry) => {
+                    expect(err).toBeDefined()
+                    expect(entry).toBeNull()
+                })
+            }).toThrow()
         })
 
-        test('Insert a broken entry (string)', (done) => {
+        test('Insert a broken entry (string)', () => {
             const entry = {
                 number: 42,
                 string: 42,
                 date: new Date(),
                 idLink: 'id table1'
             }
-            db.insert('table1', entry, (err, entry) => {
-                expect(err).toBeDefined()
-                expect(entry).toBeNull()
-                done()
-            })
+            expect(() => {
+                db.insert('table1', entry, (err, entry) => {
+                    expect(err).toBeDefined()
+                    expect(entry).toBeNull()
+                })
+            }).toThrow()
         })
 
         test('Insert a broken entry (date)', (done) => {
@@ -166,28 +168,26 @@ describe('Entry insertion and modification', () => {
                 date: 0,
                 idLink: 'id table1'
             }
-            db.insert('table1', entry, (err, entry) => {
-                expect(err).toBeDefined()
-                expect(entry).toBeNull()
-                done()
-            })
+            expect(() => {
+                db.insert('table1', entry, (err, entry) => {
+                    expect(err).toBeDefined()
+                    expect(entry).toBeNull()
+                    done()
+                })
+            }).toThrow()
         })
 
-        test('Insert broken entry (id)', (done) => {
+        test('Insert broken entry (id)', () => {
             const entry = {
                 number: 42,
                 string: 'string',
                 date: new Date(),
                 idLink: 'id table3'
             }
-            db.insert('table1', entry, (err, entry) => {
-                expect(err).toBeDefined()
-                expect(entry).toBeNull()
-                done()
-            })
+            expect(() => {
+                db.insert('table1', entry)
+            }).toThrow()
         })
-
-        // TODO: test failure of 'array id nonExistentTable'
     })
 
     test('Insert a table2 entry', (done) => {

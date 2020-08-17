@@ -39,101 +39,98 @@ module.exports = function (name, schema, options) {
         return RFC4122_TEMPLATE.replace(/[xy]/g, replacePlaceholders)
     }
 
-    _private.checkField = (type, value) => {
-        const validate = {
-            number: (val) => {
-                return typeof val === 'number'
-            },
-            string: (val) => {
-                return typeof val === 'string'
-            },
-            date: (val) => {
-                return Date.parse(val) instanceof Date
+    _private.validate = {
+        number: (val) => {
+            return typeof val === 'number'
+        },
+        string: (val) => {
+            return typeof val === 'string'
+        },
+        date: (val) => {
+            return val instanceof Date
+        }
+    }
+
+    _private.checkArrayOfType = (type, array) => {
+        if (!array || array === undefined || array === null) return true
+        if (array instanceof Array && array.length === 0) return true
+        let ret = true
+        array.forEach((v) => {
+            if (!_private.validate[type](v)) {
+                ret = false
+            }
+        })
+        return ret
+    }
+
+    _private.checkArrayOfIds = (table, value) => {
+        let ret = true
+        if (!Object.prototype.hasOwnProperty.call(db.tables, table)) {
+            throw new Error(`Referenced table ${table} does not exist.`)
+        } else {
+            if (value instanceof Array) {
+                value.forEach((v) => {
+                    if (!Object.prototype.hasOwnProperty.call(db.tables[table], v)) {
+                        ret = false
+                    }
+                })
+            } else {
+                throw new Error(`Type 'array id ${table} expects an instance of Array.`)
             }
         }
+        return ret
+    }
+
+    _private.checkIdRef = (table, value) => {
+        if (!value) return true
+        if (!Object.prototype.hasOwnProperty.call(db.tables, table)) {
+            throw new Error(`Referenced table ${table} does not exist.`)
+        } else if (!Object.prototype.hasOwnProperty.call(db.tables[table], value)) {
+            throw new Error(`Referenced entry ${table}:${value} does not exist`)
+        } else if (db.tables[table][value]) {
+            return true
+        }
+    }
+
+    _private.checkField = (type, value) => {
         const s = type.split(' ')
 
         if (s.length === 1) {
             // Simple type
-            if (validate[type] && validate[type](value)) return true
+            if (_private.validate[type] && _private.validate[type](value)) return true
             else return false
         } else if (
             s[0] === 'array' &&
             s[1] !== 'id' &&
             supportedTypes.indexOf(s[1]) >= 0
         ) {
-            // s[0] = 'array', s[1] 'type'
-            if (value.length === 0) return true
-            if (!value) return true
-            const type = s[1]
-            try {
-                value.forEach((v) => {
-                    if (!validate[type](v)) {
-                        return false
-                    }
-                })
-                return true
-            } catch (e) {
-                return false
-            }
+            return _private.checkArrayOfType(s[1], value)
         } else if (s[0] === 'array' && s[1] === 'id') {
-            // s[0] = 'array', s[1] = 'id', s[2] = 'tableName'
-            if (!db.tables[s[2]]) {
-                return new Error(`Referenced table ${s[2]} does not exist.`)
-            } else {
-                if (value instanceof Array) {
-                    value.forEach((v) => {
-                        if (!db.tables[s[2]][value]) {
-                            return false
-                        }
-                    })
-                    return true
-                } else {
-                    // single value
-                    if (!db[s[2][value]]) {
-                        return false
-                    } else {
-                        return true
-                    }
-                }
-            }
+            return _private.checkArrayOfIds(s[2], value)
         } else if (s[0] === 'id') {
-            if (!value) return true
-            if (!db.tables[s[1]]) {
-                return new Error(`Referenced table ${s[1]} does not exist.`)
-            } else if (!db.tables[s[1]][value]) {
-                return new Error(`Referenced entry ${s[1]}:${value} does not exist`)
-            } else if (db.tables[s[1]][value]) {
-                return true
-            }
+            return _private.checkIdRef(s[1], value)
         }
     }
 
     _private.connect = () => {
         setPath()
-        try {
-            db = JSON.parse(fs.readFileSync(db.path))
-            if (db.path) {
+        if (db.path && fs.existsSync(db.path)) {
+            try {
+                db = JSON.parse(fs.readFileSync(db.path))
                 return true
-            } else {
-                return false
+            } catch (e) {
+                throw new Error(`Failed to load db ${name}: ${e}`)
             }
-        } catch (e) {
-            throw new Error(`Failed to load db ${name}: ${e}`)
-        }
+        } else return false
     }
 
     _private.create = () => {
         setPath()
-        _private.verifyTables(schema, (err, data) => {
-            if (err) {
-                throw err
-            } else {
-                db.schemas = data
-                db.tables = {}
-                for (const key in data) {
-                    db.tables[key] = {}
-                }
+        _private.verifyTables(schema, (data) => {
+            db.schemas = data
+            db.tables = {}
+            for (const key in data) {
+                db.tables[key] = {}
             }
         })
         return true
@@ -167,6 +164,20 @@ module.exports = function (name, schema, options) {
         return all
     }
 
+    _private.validateResult = (result) => {
+        const ret = []
+        if (result instanceof Array) {
+            if (!result.length) return null
+            else if (result.length === 1 && !result[0].length) return null
+            for (var i in result) {
+                if (result[i].length) ret.push(result[i])
+            }
+            if (!ret.length) return null
+            else return ret
+        }
+        return null
+    }
+
     _private.execQuery = (query) => {
         const found = []
         if (query instanceof Query) {
@@ -181,8 +192,7 @@ module.exports = function (name, schema, options) {
         } else {
             throw new Error('Query parameter must be either an array of Query objects, or a single Query object.')
         }
-        if (found.length === 0) return null
-        else return found
+        return _private.validateResult(found)
     }
 
     _private.convertEntryArrayToObject = (query, ids) => {
@@ -231,7 +241,62 @@ module.exports = function (name, schema, options) {
         return true
     }
 
+    _private.checkBasicType = (field) => {
+        if (supportedTypes.indexOf(field.type) < 0) {
+            throw new Error(`Not a supported type: ${field.type}.`)
+        } else {
+            return true
+        }
+    }
+
+    _private.checkArrayOrId = (type, target, tableNames) => {
+        if (type === 'id') {
+            if (tableNames.indexOf(target) < 0) {
+                throw new Error(`Table ${target} does not exist.`)
+            } else {
+                return true
+            }
+        } else if (type === 'array') {
+            if (supportedTypes.indexOf(target) < 0) {
+                throw new Error(`Not a supported type: ${target}.`)
+            } else {
+                return true
+            }
+        } else {
+            throw new Error(`Failed to parse table target type: ${type} ${target}`)
+        }
+    }
+
+    _private.checkArrayId = (table, tableNames) => {
+        if (tableNames.indexOf(table) < 0) {
+            throw new Error(`Table ${table} does not exist.`)
+        } else {
+            return true
+        }
+    }
+
+    _private.checkTable = (table, tableNames) => {
+        for (var key in table) {
+            if (!table[key].type) {
+                throw new Error(`'${table}' '${key}' has undefined type`)
+            }
+            const s = table[key].type.split(' ')
+            const field = table[key]
+            if (s.length === 1) {
+                // "${type}"
+                _private.checkBasicType(field)
+            } else if (s.length === 2) {
+                // either "array ${type}" or "id ${table}"
+                _private.checkArrayOrId(s[0], s[1], tableNames)
+            } else if (s.length === 3) {
+                // "array id ${table}"
+                _private.checkArrayId(s[2], tableNames)
+            }
+        }
+    }
+
     _private.verifyTables = (inputTables, cb) => {
+        if (typeof cb !== 'function') throw new Error('Callback parameter must be function type.')
         const tables = []
         const tableNames = []
 
@@ -239,49 +304,11 @@ module.exports = function (name, schema, options) {
             tables.push(inputTables[key])
             tableNames.push(key)
         }
-
+        // If this forEach succeeds without throwing, the tables object is valid
         tables.forEach((table) => {
-            for (const key in table) {
-                if (!table[key].type) {
-                    cb(Error(`Table attribute '${key}' has undefined type`))
-                }
-                const s = table[key].type.split(' ')
-                const f = table[key]
-                if (s.length === 1) {
-                    // type is basic
-                    if (supportedTypes.indexOf(f.type) < 0) {
-                        cb(new Error(`Not a supported type: ${f.type}.`), null)
-                    } else {
-                        continue
-                    }
-                } else if (s.length === 2) {
-                    // either "array ${type}" or "id ${table}"
-                    if (s[0] === 'id') {
-                        if (tableNames.indexOf(s[1]) < 0) {
-                            return cb(new Error(`Table ${s[1]} does not exist.`), null)
-                        } else {
-                            continue
-                        }
-                    } else if (s[0] === 'array') {
-                        if (supportedTypes.indexOf(s[1]) < 0) {
-                            return cb(new Error(`Not a supported type: ${s[1]}.`), null)
-                        } else {
-                            continue
-                        }
-                    } else {
-                        continue
-                    }
-                } else if (s.length === 3) {
-                    // "array id ${table}"
-                    if (tableNames.indexOf(s[2]) < 0) {
-                        cb(new Error(`Table ${s[2]} does not exist.`), null)
-                    } else {
-                        continue
-                    }
-                }
-            }
+            _private.checkTable(table, tableNames)
         })
-        cb(null, inputTables)
+        cb(inputTables)
     }
 
     _public.deleteById = (table, id, cb) => {
@@ -315,7 +342,10 @@ module.exports = function (name, schema, options) {
         } else {
             let ret = {}
             let found = _private.execQuery(query)
-            if (!found) ret = null
+            if (!found) {
+                cb(null, null)
+                return null
+            }
 
             if (found.length === 1) {
                 if (options.n === Infinity) {
