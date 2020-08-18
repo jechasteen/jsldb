@@ -47,9 +47,12 @@ Make the changes to the entry inside of the callback
 db.updateById('table', uuid, (err, entry) => {
     if (err) res.redirect('/failure')
     entry.name = 'new name'
+    entry.save()
     res.redirect('/success')
 })
 ```
+
+be sure to call `.save()` on the entry, otherwise nothing will happen.
 
 ## Queries
 

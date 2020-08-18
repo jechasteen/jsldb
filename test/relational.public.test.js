@@ -559,6 +559,8 @@ describe('update operations', () => {
         db.updateById('table1', t1EntryId, (err, entry) => {
             if (err) done(err)
             entry.string = 'newString'
+            entry.save()
+            t1Entry.string = 'newString'
             db.findById('table1', t1EntryId, (err, entry) => {
                 if (err) done(err)
                 expect(entry.string).toEqual('newString')
@@ -572,6 +574,7 @@ describe('update operations', () => {
             db.updateById('table1', t1EntryId, (err, entry) => {
                 if (err) done(err)
                 entry.string = 42
+                entry.save()
             })
         }).toThrow()
 

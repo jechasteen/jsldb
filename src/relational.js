@@ -482,11 +482,17 @@ module.exports = function (name, schema, options) {
                 Object.prototype.hasOwnProperty.call(db.tables[table], id)) {
             let entry = db.tables[table][id]
             const savedEntry = Object.assign({}, entry)
-            cb(null, db.tables[table][id])
-            if (!_private.validateEntry(table, entry)) {
-                entry = savedEntry
-                throw new Error(`Failed to validate the entry -> ${entry}`)
+            const copiedEntry = Object.assign({}, entry)
+            copiedEntry.save = () => {
+                if (!_private.validateEntry(table, copiedEntry)) {
+                    entry = savedEntry
+                    throw new Error(`Failed to validate the entry -> ${entry}`)
+                } else {
+                    delete copiedEntry.save
+                    db.tables[table][id] = copiedEntry
+                }
             }
+            cb(null, copiedEntry)
         }
     }
 
