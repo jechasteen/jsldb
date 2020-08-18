@@ -1,5 +1,7 @@
 # jsldb.relational
 
+[Glossary](../Glossary.md) of terms used in this document
+
 ## Construction
 
 ### `const jsldb = require('jsldb')`
@@ -8,8 +10,8 @@
 
 |param|type|desc|
 |-----|----|----|
-|dbName|string|The only real significance of this string is the file that will be created upon calling `save()` or `saveSync()`. The file will be saved as `dbName.db.json` in the current directory|
-|tableSchemas|Schema|The [Schema](../Schemas.md) for the new database. This object determines the field and type data for the resulting db.
+|dbName|string|The significance of this string is the db file name upon calling `save()` or `saveSync()`. The file will be saved as `dbName.db.json` in the current directory|
+|tableSchemas|[Schema](../Schemas.md)|This object configures the field and type data.
 
 ## Adding Entries
 
@@ -21,6 +23,13 @@
 |entry|object|The entry (conforming to the table's schema) that will be inserted. It will be assigned an `_id` automatically.|
 |callback|function|[(Error, entry)](#Callbacks) The `entry` parameter will, on success, be the entry passed to the `insert` function with its newly-minted `_id` field.|
 
+```js
+db.insert('table', entry, (err, entry) => {
+    if (err) res.redirect('/failure')
+    if (entry) res.redirect('/success')
+})
+```
+
 ## Deleting Entries
 
 ### `db.deleteById(table, id, callback)`
@@ -31,6 +40,10 @@
 |id|UUID string|The id of the item to delete|
 |callback|function|[(Error)](#Callbacks)
 
+```js
+db.deleteById('table', entry._id, handleDelete)
+```
+
 ## Updating Entries
 
 ### `db.updateById(table, id, callback)`
@@ -39,20 +52,52 @@
 |-----|----|----|
 |table|string|The table to select|
 |id|UUID string|The id of the item to delete|
-|callback|function|[(Error)](#Callbacks)
+|callback|function|[(Error, entry)](#Callbacks) **REQUIRED**
 
 Make the changes to the entry inside of the callback
 
 ```js
 db.updateById('table', uuid, (err, entry) => {
+    
+})
+```
+
+```js
+const updateEntry = (err, entry) => {
     if (err) res.redirect('/failure')
     entry.name = 'new name'
     entry.save()
     res.redirect('/success')
-})
+}
+
+db.updateById('table', entry._id, updateEntry)
 ```
 
 be sure to call `.save()` on the entry, otherwise nothing will happen.
+
+## Saving
+
+### `db.saveSync()` -> Boolean
+
+Returns true if writing the file succeeds.
+
+```js
+if (db.saveSync()) res.redirect('/success')
+else res.redirect('/failure')
+```
+
+### `db.save(callback)`
+
+#### Callback `(Error) => { ... }`
+
+```js
+db.save((err) => {
+    if (err) res.redirect('/failure', { error: err })
+    else res.redirect('/success')
+})
+```
+
+Handle `fs.write` error inside the callback.
 
 ## Queries
 
@@ -75,15 +120,19 @@ When constructing a a query, you may choose from the following logic:
 |------|----|
 |`'eq'`|strict equal to|
 |`'gt'`|greater than (literally `value > entry ?`)|
-|`'lt'`||
-|`'gte'`||
-|`'lte'`||
-|`'regex'`||
-|`'contains'`||
+|`'lt'`|less than|
+|`'gte'`|greater than or equal to|
+|`'lte'`|less than or equal to|
+|`'regex'`|`new RegExp('/something/g')`|
+|`'contains'`|for array fields only, does the array contain?|
 
-For each of the boolean comparisons above, it is literally `value > entry ?`, for example.
+For each of the boolean comparisons above, it is literally `value > entry ? ...`
 
-See [Queries](Queries.md) for more detail.
+```js
+const q = new Query('table', 'field', 'lte', 64)
+```
+
+See [Queries](../Queries.md) for more detail.
 
 ## Find Functions
 
@@ -102,27 +151,30 @@ All others are simply mapped to this functions for convenience.
 You may omit the options object and pass `(query, callback)` as the parameters.
 You will get the defaults in the table above.
 
+#### Entries will be null, or 1+ entries as an object with `._id` as keys.
+
 ```js
 db.find([
     new Query('table1', 'size', 'gt', 5),
     new Query('table1', 'size')
 ], (err, entries) => {
     if (err) res.redirect('/failure')
-    if (entries) res.redirect('/success')
+    if (entries) res.redirect('/success', { entries: entries })
 })
 ```
 
 ### Basic find functions
 
 All of these functions have the parameters `(query, callback)` where query is `Query` or `Query[]`, and the callback gets `(err, entries)`.
-Entries will be null, or 1+ entries.
+
+#### `(query, callback)`
 
 |function|logic|
 |----|----|
-|`findAll(...)`|AND Logic|
-|`findAny(...)`|OR Logic|
-|`findAny1(...)`|OR Logic|
-|`find1(...)`|AND Logic|
+|`findAll`|AND Logic|
+|`findAny`|OR Logic|
+|`findAny1`|OR Logic|
+|`find1`|AND Logic|
 
 ```js
 findAny(new Query('table', 'age', 'lt', 50),
@@ -137,7 +189,7 @@ findAny(new Query('table', 'age', 'lt', 50),
 
 Find n functions work the same as other find functions, but require an additional parameter.
 
-`(n, query, callback)`
+#### `(n, query, callback)`
 
 |function|logic|
 |----|----|
@@ -213,3 +265,19 @@ db.insert('table', entry, (err, newEntry) => {
     )
 })
 ```
+
+Sometimes a callback is convenient. Other times, like the last example above, it can get really deep, really fast. Callback hell.
+
+Any time this happens, refactor your code. Remember, for virtually all functions (except `updateById`) the callback parameter is optional. It is for convenience. The function also returns the entry or an error.
+
+## Advanced
+
+### Raw data
+
+There are getters for a few raw data members:
+
+#### `db.tables()` -> the complete raw tables object
+
+#### `db.schema()` -> the verified schema object
+
+#### `db.path()` -> path to the .db.json file

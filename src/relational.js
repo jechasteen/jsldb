@@ -431,7 +431,8 @@ module.exports = function (name, schema, options) {
         db.tables[table][id]._id = id
 
         cb(null, db.tables[table][id])
-        return false
+        return Object.prototype.hasOwnProperty.call(db.tables[table], id)
+            ? db.tables[table][id] : null
     }
 
     _public.save = (cb) => {
@@ -477,6 +478,7 @@ module.exports = function (name, schema, options) {
     }
 
     _public.updateById = (table, id, cb) => {
+        if (!cb) throw new Error('Callback was not defined.')
         if (typeof cb !== 'function') throw new Error('Callback parameter to updateById must be function type.')
         if (Object.prototype.hasOwnProperty.call(db.tables, table) &&
                 Object.prototype.hasOwnProperty.call(db.tables[table], id)) {

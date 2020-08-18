@@ -121,13 +121,13 @@ describe('Entry insertion and modification', () => {
     })
 
     test('Insert a second table1 entry', (done) => {
-        db.insert('table1', t1Entry2, (err, entry) => {
+        expect(db.insert('table1', t1Entry2, (err, entry) => {
             if (err) done(err)
             t1Entry2Id = entry._id
             t1Entry2._id = entry._id
             expect(entry).toBe(t1Entry2)
             done()
-        })
+        })).toBeTruthy()
     })
 
     describe('Entry type check', () => {
