@@ -80,8 +80,8 @@ describe('Creation, saving, and connection', () => {
         }
     })
 
-    test('Save (sync)', () => {
-        expect(db.saveSync()).toBe(true)
+    test('saveSync', () => {
+        expect(db.saveSync()).toBeTruthy()
     })
 
     test('Connect to existing database', () => {
@@ -244,6 +244,14 @@ describe('Entry insertion and modification', () => {
             expect(fs.existsSync(tPath)).toBe(true)
             done()
         })
+    })
+})
+
+describe('insertion errors', () => {
+    test('callback defined but not function type should throw', () => {
+        expect(() => {
+            db.insert('table', t1Entry, 'notafunction')
+        }).toThrow()
     })
 })
 

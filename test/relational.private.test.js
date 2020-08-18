@@ -130,6 +130,46 @@ describe('validateResult', () => {
     })
 })
 
+describe('convertArrayToObject', () => {
+    test('return value should be object or null', () => {
+        const fakeQ = new Query('table', 'string', 'eq', 0)
+        const shouldLookLike = (() => {
+            const ret = {}
+            ret[entry1._id] = entry1
+            ret[entry2._id] = entry2
+            return ret
+        })()
+        expect(priv.convertEntryArrayToObject(fakeQ, [entry1._id, entry2._id]))
+            .toMatchObject(shouldLookLike)
+    })
+})
+
+describe('checkTableArrayOrId', () => {
+    test('type === array with unsupported type should throw', () => {
+        expect(() => {
+            priv.checkTableArrayOrId('array', 'unsupported', ['table'])
+        }).toThrow()
+    })
+
+    test('type === array with supported type should return true', () => {
+        expect(priv.checkTableArrayOrId('array', 'number', ['table'])).toBeTruthy()
+    })
+
+    test('passing neither id nor array to type param should throw', () => {
+        expect(() => {
+            priv.checkTableArrayOrId('wrong', 'number', ['table'])
+        }).toThrow()
+    })
+})
+
+describe('verifyTables', () => {
+    test('callback parameter with other than function type should throw', () => {
+        expect(() => {
+            priv.verifySchema(privSchema, 0)
+        }).toThrow()
+    })
+})
+
 afterAll(() => {
     if (fs.existsSync(db.path())) {
         fs.unlinkSync(db.path())

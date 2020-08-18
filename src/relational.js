@@ -126,7 +126,7 @@ module.exports = function (name, schema, options) {
 
     _private.create = () => {
         setPath()
-        _private.verifyTables(schema, (data) => {
+        _private.verifySchema(schema, (data) => {
             db.schemas = data
             db.tables = {}
             for (const key in data) {
@@ -241,7 +241,7 @@ module.exports = function (name, schema, options) {
         return true
     }
 
-    _private.checkBasicType = (field) => {
+    _private.checkTableBasicType = (field) => {
         if (supportedTypes.indexOf(field.type) < 0) {
             throw new Error(`Not a supported type: ${field.type}.`)
         } else {
@@ -249,7 +249,7 @@ module.exports = function (name, schema, options) {
         }
     }
 
-    _private.checkArrayOrId = (type, target, tableNames) => {
+    _private.checkTableArrayOrId = (type, target, tableNames) => {
         if (type === 'id') {
             if (tableNames.indexOf(target) < 0) {
                 throw new Error(`Table ${target} does not exist.`)
@@ -267,7 +267,7 @@ module.exports = function (name, schema, options) {
         }
     }
 
-    _private.checkArrayId = (table, tableNames) => {
+    _private.checkTableArrayId = (table, tableNames) => {
         if (tableNames.indexOf(table) < 0) {
             throw new Error(`Table ${table} does not exist.`)
         } else {
@@ -284,31 +284,31 @@ module.exports = function (name, schema, options) {
             const field = table[key]
             if (s.length === 1) {
                 // "${type}"
-                _private.checkBasicType(field)
+                _private.checkTableBasicType(field)
             } else if (s.length === 2) {
                 // either "array ${type}" or "id ${table}"
-                _private.checkArrayOrId(s[0], s[1], tableNames)
+                _private.checkTableArrayOrId(s[0], s[1], tableNames)
             } else if (s.length === 3) {
                 // "array id ${table}"
-                _private.checkArrayId(s[2], tableNames)
+                _private.checkTableArrayId(s[2], tableNames)
             }
         }
     }
 
-    _private.verifyTables = (inputTables, cb) => {
+    _private.verifySchema = (inputSchema, cb) => {
         if (typeof cb !== 'function') throw new Error('Callback parameter must be function type.')
         const tables = []
         const tableNames = []
 
-        for (const key in inputTables) {
-            tables.push(inputTables[key])
+        for (const key in inputSchema) {
+            tables.push(inputSchema[key])
             tableNames.push(key)
         }
         // If this forEach succeeds without throwing, the tables object is valid
         tables.forEach((table) => {
             _private.checkTable(table, tableNames)
         })
-        cb(inputTables)
+        cb(inputSchema)
     }
 
     _public.deleteById = (table, id, cb) => {
@@ -316,8 +316,11 @@ module.exports = function (name, schema, options) {
         if (Object.prototype.hasOwnProperty.call(db.tables[table], id)) {
             delete db.tables[table][id]
             cb(null)
+            return null
         } else {
-            cb(new Error(`Table has no entry with id ${id}`))
+            const err = new Error(`Table has no entry with id ${id}`)
+            cb(err)
+            return err
         }
     }
 
@@ -415,12 +418,8 @@ module.exports = function (name, schema, options) {
         const schema = db.schemas[table]
 
         for (const k in entry) {
-            if (!schema[k]) cb(new Error(`Schema key ${k} has no type`), null)
             const checkResult = _private.checkField(schema[k].type, entry[k])
-            if (checkResult instanceof Error) {
-                cb(checkResult, null)
-                return
-            } else if (!checkResult) {
+            if (!checkResult) {
                 cb(new Error(`Type check failed: table ${table}, field ${schema[k]}, value ${entry[k]}`), null)
             } else {
                 continue
