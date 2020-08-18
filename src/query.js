@@ -9,8 +9,10 @@
  * @param {*} val The value to use in the search function
  */
 function Query (table, field, fn, val) {
-    if (!table || !field || !fn || !val) {
-        throw new Error('new Query: all arguments are required')
+    for (var i = 0; i < 4; i++) {
+        if (i !== 3) {
+            if (!arguments[i]) throw new Error('new Query: all arguments are required')
+        }
     }
     this.table = table
     this.field = field
