@@ -8,7 +8,7 @@ jsldb is type safe, fast, and easy to use.
 jsldb is intended for rapid prototyping and other non-critical use-cases.
 Get functionality similar to mongoose without needing to spin up an instance.
 
-*NOTE: This project is currently a work in progress and, as such, will be under heavy development. Use at your own risk before version 1.0.0*
+*NOTE: This project is in a relatively untested state. Although I have a number of synthetic tests set up, it has not been tested 'in the field'. I would greatly appreciate you giving it a try and reporting any bugs you find or features you'd like to see!*
 
 ## Getting Started
 
@@ -68,11 +68,8 @@ const db = jsldb.relational('newdb', tables)
 
 app.get('/table1/:id', (req, res) => {
     db.findById('table1', req.params.id, (err, data) => {
-        if (err) {
-            res.render('error', { error: err })
-        } else {
-            res.render('table1', data)
-        }
+        if (err) res.render('error', { error: err })
+        else res.render('table1', data)
     })
 })
 
@@ -80,11 +77,8 @@ app.get('/table/q/:query', (req, res) => {
     db.findAll(
         new Query('table1', 'field1', 'eq', 'some string'),
         (err, entries) => {
-            if (err) {
-                res.render('error', { error: err })
-            } else {
-                res.render('query', { results: entries })
-            }
+            if (err) res.render('error', { error: err })
+            else res.render('query', { results: entries })
         }
     )
 })
@@ -92,21 +86,15 @@ app.get('/table/q/:query', (req, res) => {
 app.post('/table1', (req, res) => {
     // Pass data from the browser to the server wrapped inside an object named entry attached to the request body
     db.insert('table1', req.body.entry, (err, data) => {
-        if (err) {
-            res.render('error', { error: err })
-        } else {
-            res.redirect('/table1')
-        }
+        if (err) res.render('error', { error: err })
+        else res.redirect('/table1')
     })
 })
 
 app.delete('/table1/:id', (req, res) => {
     db.deleteById('table1', req.params.id, (err, data) => {
-        if (err) {
-            res.render('error', { error: err })
-        } else {
-            res.redirect('/')
-        }
+        if (err) res.render('error', { error: err })
+        else res.redirect('/')
     })
 })
 
