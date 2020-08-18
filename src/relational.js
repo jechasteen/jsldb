@@ -52,7 +52,7 @@ module.exports = function (name, schema, options) {
     }
 
     _private.checkArrayOfType = (type, array) => {
-        if (!array || array === undefined || array === null) return true
+        if (!array) return true
         if (array instanceof Array && array.length === 0) return true
         let ret = true
         array.forEach((v) => {
@@ -97,8 +97,7 @@ module.exports = function (name, schema, options) {
 
         if (s.length === 1) {
             // Simple type
-            if (_private.validate[type] && _private.validate[type](value)) return true
-            else return false
+            return (_private.validate[type] && _private.validate[type](value))
         } else if (
             s[0] === 'array' &&
             s[1] !== 'id' &&
@@ -167,8 +166,7 @@ module.exports = function (name, schema, options) {
     _private.validateResult = (result) => {
         const ret = []
         if (result instanceof Array) {
-            if (!result.length) return null
-            else if (result.length === 1 && !result[0].length) return null
+            if (!result.length || (result.length === 1 && !result[0].length)) return null
             for (var i in result) {
                 if (result[i].length) ret.push(result[i])
             }
@@ -234,9 +232,9 @@ module.exports = function (name, schema, options) {
     }
 
     _private.validateEntry = (table, entry) => {
-        const schema = db.schemas[table]
-        for (var field in schema) {
-            if (!_private.checkField(schema[field].type, entry[field])) return false
+        const sch = db.schemas[table]
+        for (var field in sch) {
+            if (!_private.checkField(sch[field].type, entry[field])) return false
         }
         return true
     }
@@ -324,54 +322,50 @@ module.exports = function (name, schema, options) {
         }
     }
 
-    _public.find = (query, options, cb) => {
-        if (typeof options === 'function') cb = options
-        if (options && (typeof options !== 'object' && typeof options !== 'function')) {
+    _public.find = (query, findOptions, cb) => {
+        if (typeof findOptions === 'function') cb = findOptions
+        if (findOptions && (typeof findOptions !== 'object' && typeof findOptions !== 'function')) {
             throw new Error('Second parameter to find was neither an Options object or a callback function.')
         }
         if (cb && typeof cb !== 'function') throw new Error('Callback parameter to find* must be function type.')
-        if (!options || !options.queryLogic) {
-            if (!options) options = {}
+        if (!findOptions || !findOptions.queryLogic) {
+            if (!findOptions) findOptions = {}
         }
-        if (!options.queryLogic) {
-            options.queryLogic = 'AND'
+        if (!findOptions.queryLogic) {
+            findOptions.queryLogic = 'AND'
         }
-        if (!options.n) {
-            options.n = Infinity
+        if (!findOptions.n) {
+            findOptions.n = Infinity
         }
 
-        if (options.queryLogic === 'id' && typeof query === 'string' && typeof options === 'string') {
-            return _public.findById(query, options, cb)
-        } else {
-            let ret = {}
-            let found = _private.execQuery(query)
-            if (!found) {
-                cb(null, null)
-                return null
-            }
-
-            if (found.length === 1) {
-                if (options.n === Infinity) {
-                    ret = _private.convertEntryArrayToObject(query, found[0])
-                } else {
-                    ret = _private.convertEntryArrayToObject(query, found[0].slice(0, options.n))
-                }
-            } else if (found.length > 1) {
-                query = query[0]
-                if (options.queryLogic === 'AND') {
-                    found = _private.AND(found)
-                } else if (options.queryLogic === 'OR') {
-                    found = _private.OR(found)
-                }
-                if (options.n === Infinity) {
-                    ret = _private.convertEntryArrayToObject(query, found)
-                } else {
-                    ret = _private.convertEntryArrayToObject(query, found.slice(0, options.n))
-                }
-            }
-            if (typeof cb === 'function') cb(null, ret)
-            return ret
+        let ret = {}
+        let found = _private.execQuery(query)
+        if (!found) {
+            cb(null, null)
+            return null
         }
+
+        if (found.length === 1) {
+            if (findOptions.n === Infinity) {
+                ret = _private.convertEntryArrayToObject(query, found[0])
+            } else {
+                ret = _private.convertEntryArrayToObject(query, found[0].slice(0, findOptions.n))
+            }
+        } else if (found.length > 1) {
+            query = query[0]
+            if (findOptions.queryLogic === 'AND') {
+                found = _private.AND(found)
+            } else if (findOptions.queryLogic === 'OR') {
+                found = _private.OR(found)
+            }
+            if (findOptions.n === Infinity) {
+                ret = _private.convertEntryArrayToObject(query, found)
+            } else {
+                ret = _private.convertEntryArrayToObject(query, found.slice(0, findOptions.n))
+            }
+        }
+        if (typeof cb === 'function') cb(null, ret)
+        return ret
     }
 
     _public.findAll = (query, cb) => {
@@ -415,12 +409,12 @@ module.exports = function (name, schema, options) {
 
     _public.insert = (table, entry, cb) => {
         if (cb && typeof cb !== 'function') throw new Error('Callback passed to insert must be function type.')
-        const schema = db.schemas[table]
+        const sch = db.schemas[table]
 
         for (const k in entry) {
-            const checkResult = _private.checkField(schema[k].type, entry[k])
+            const checkResult = _private.checkField(sch[k].type, entry[k])
             if (!checkResult) {
-                cb(new Error(`Type check failed: table ${table}, field ${schema[k]}, value ${entry[k]}`), null)
+                cb(new Error(`Type check failed: table ${table}, field ${sch[k]}, value ${entry[k]}`), null)
             } else {
                 continue
             }
@@ -453,11 +447,7 @@ module.exports = function (name, schema, options) {
 
         const dbJSON = JSON.stringify(db)
         fs.writeFileSync(db.path, dbJSON, { encoding: 'utf8' })
-        if (fs.existsSync(db.path)) {
-            return true
-        } else {
-            return false
-        }
+        return fs.existsSync(db.path)
     }
 
     _public.setFieldById = (table, id, field, value, cb) => {

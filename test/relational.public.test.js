@@ -139,9 +139,9 @@ describe('Entry insertion and modification', () => {
                 idLink: 'id table1'
             }
             expect(() => {
-                db.insert('table1', entry, (err, entry) => {
+                db.insert('table1', entry, (err, newEntry) => {
                     expect(err).toBeDefined()
-                    expect(entry).toBeNull()
+                    expect(newEntry).toBeNull()
                 })
             }).toThrow()
         })
@@ -154,9 +154,9 @@ describe('Entry insertion and modification', () => {
                 idLink: 'id table1'
             }
             expect(() => {
-                db.insert('table1', entry, (err, entry) => {
+                db.insert('table1', entry, (err, newEntry) => {
                     expect(err).toBeDefined()
-                    expect(entry).toBeNull()
+                    expect(newEntry).toBeNull()
                 })
             }).toThrow()
         })
@@ -169,9 +169,9 @@ describe('Entry insertion and modification', () => {
                 idLink: 'id table1'
             }
             expect(() => {
-                db.insert('table1', entry, (err, entry) => {
+                db.insert('table1', entry, (err, newEntry) => {
                     expect(err).toBeDefined()
-                    expect(entry).toBeNull()
+                    expect(newEntry).toBeNull()
                     done()
                 })
             }).toThrow()
@@ -561,9 +561,9 @@ describe('update operations', () => {
             entry.string = 'newString'
             entry.save()
             t1Entry.string = 'newString'
-            db.findById('table1', t1EntryId, (err, entry) => {
-                if (err) done(err)
-                expect(entry.string).toEqual('newString')
+            db.findById('table1', t1EntryId, (e, foundEntry) => {
+                if (e) done(e)
+                expect(foundEntry.string).toEqual('newString')
                 done()
             })
         })
@@ -588,10 +588,10 @@ describe('update operations', () => {
 
 describe('delete operations', () => {
     test('deleteById', (done) => {
-        db.deleteById('table1', t1EntryId, (err) => {
-            if (err) done(err)
-            db.deleteById('table1', t1Entry2Id, (err) => {
-                if (err) done(err)
+        db.deleteById('table1', t1EntryId, (e) => {
+            if (e) done(e)
+            db.deleteById('table1', t1Entry2Id, (er) => {
+                if (er) done(er)
                 expect(db.tables().table1).toStrictEqual({})
                 db.deleteById('table2', t2EntryId, (err) => {
                     if (err) done(err)
