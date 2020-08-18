@@ -58,7 +58,10 @@ Make the changes to the entry inside of the callback
 
 ```js
 db.updateById('table', uuid, (err, entry) => {
-    
+    if (err) res.redirect('/failure')
+    entry.name = 'new name'
+    entry.save()
+    res.redirect('/success')
 })
 ```
 
