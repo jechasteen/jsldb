@@ -275,7 +275,7 @@ module.exports = function (name, schema, options) {
 
     _private.checkTable = (table, tableNames) => {
         for (var key in table) {
-            if (!table[key].type) {
+            if (!Object.prototype.hasOwnProperty.call(table[key].type)) {
                 throw new Error(`'${table}' '${key}' has undefined type`)
             }
             const s = table[key].type.split(' ')
