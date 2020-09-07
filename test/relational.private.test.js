@@ -162,6 +162,22 @@ describe('checkTableArrayOrId', () => {
     })
 })
 
+describe('checkTable', () => {
+    test('fields should have a type field and it should not be null or undefined', () => {
+        expect(() => {
+            priv.checkTable('fake', { table: {} })
+        }).toThrow()
+
+        expect(() => {
+            priv.checkTable('fake', { table: { type: undefined } })
+        }).toThrow()
+
+        expect(() => {
+            priv.checkTable('fake', { table: { type: null } })
+        }).toThrow()
+    })
+})
+
 describe('verifyTables', () => {
     test('callback parameter with other than function type should throw', () => {
         expect(() => {
