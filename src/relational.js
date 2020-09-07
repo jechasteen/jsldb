@@ -279,6 +279,9 @@ module.exports = function (name, schema, options) {
                 table[key].type === undefined || table[key].type === null) {
                 throw new Error(`'${table}' '${key}' has undefined type`)
             }
+            if ((table[key].type instanceof Array)) {
+                throw new Error(`To create an array type, pass 'array ${table[key].type[0] || 'type'}'`)
+            }
             const s = table[key].type.split(' ')
             const field = table[key]
             if (s.length === 1) {
