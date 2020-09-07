@@ -178,6 +178,14 @@ describe('checkTable', () => {
     })
 })
 
+describe('insert', () => {
+    test('named table should exist', () => {
+        expect(() => {
+            priv.insert('fake')
+        }).toThrow()
+    })
+})
+
 describe('verifyTables', () => {
     test('callback parameter with other than function type should throw', () => {
         expect(() => {

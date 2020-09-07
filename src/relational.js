@@ -413,6 +413,9 @@ module.exports = function (name, schema, options) {
 
     _public.insert = (table, entry, cb) => {
         if (cb && typeof cb !== 'function') throw new Error('Callback passed to insert must be function type.')
+        if (!Object.prototype.hasOwnProperty.call(db.schemas, table)) {
+            cb(new Error(`Table '${table} not found.'`))
+        }
         const sch = db.schemas[table]
 
         for (const k in entry) {
