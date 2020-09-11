@@ -14,6 +14,16 @@ if (!Object.size) {
     }
 }
 
+const getUUID = () => {
+    var RFC4122_TEMPLATE = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+    var replacePlaceholders = function (placeholder) {
+        var random = Math.round(Math.random() * 15)
+        var value = placeholder === 'x' ? random : (random & 0x3 | 0x8)
+        return value.toString(16)
+    }
+    return RFC4122_TEMPLATE.replace(/[xy]/g, replacePlaceholders)
+}
+
 module.exports = function (name, schema, options) {
     const supportedTypes = ['number', 'string', 'date']
     const _public = {}
@@ -26,18 +36,6 @@ module.exports = function (name, schema, options) {
     }
 
     setPath()
-
-    // Borrowed from faker sources because it's a fabulous method for javascript
-    // https://github.com/Marak/faker.js/blob/master/lib/random.js
-    _private.getUUID = () => {
-        var RFC4122_TEMPLATE = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-        var replacePlaceholders = function (placeholder) {
-            var random = Math.round(Math.random() * 15)
-            var value = placeholder === 'x' ? random : (random & 0x3 | 0x8)
-            return value.toString(16)
-        }
-        return RFC4122_TEMPLATE.replace(/[xy]/g, replacePlaceholders)
-    }
 
     _private.validate = {
         number: (val) => {
@@ -427,7 +425,7 @@ module.exports = function (name, schema, options) {
             }
         }
 
-        const id = _private.getUUID()
+        const id = getUUID()
         db.tables[table][id] = entry
         db.tables[table][id]._id = id
 
