@@ -1,14 +1,12 @@
-# JavaScript Local Database
+# JavaScript Light Database
 
 [![Build Status](https://travis-ci.org/jechasteen/jsldb.svg?branch=master)](https://travis-ci.org/jechasteen/jsldb) [![codecov](https://codecov.io/gh/jechasteen/jsldb/branch/master/graph/badge.svg)](https://codecov.io/gh/jechasteen/jsldb) [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/jechasteen/jsldb.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/jechasteen/jsldb/context:javascript)
 
 In-memory database for Node with no dependencies.
-jsldb is type safe, fast, and easy to use.
+jsldb is statically typed, fast, and easy to use.
 
 jsldb is intended for rapid prototyping and other non-critical use-cases.
 Get functionality similar to mongoose without needing to spin up an instance.
-
-*NOTE: This project is in a relatively untested state. Although I have a number of synthetic tests set up, it has not been tested 'in the field'. I would greatly appreciate you giving it a try and reporting any bugs you find or features you'd like to see!*
 
 ## Getting Started
 
@@ -34,7 +32,7 @@ Queries return an object containing the entry or entries which match the given q
 ```javascript
 const express = require('express')
 const app = express()
-const jsldb = require('jsldb')
+const { jsldb, Query } = require('jsldb')
 const bodyParser = require('body-parser')
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -64,7 +62,7 @@ const tables = {
     }
 }
 
-const db = jsldb.relational('newdb', tables)
+const db = jsldb('newdb', tables)
 
 app.get('/table1/:id', (req, res) => {
     db.findById('table1', req.params.id, (err, data) => {
