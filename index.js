@@ -1,4 +1,4 @@
 
-module.exports.relational = require('./src/relational')
+module.exports.jsldb = require('./src')
 
 module.exports.Query = require('./src/query')

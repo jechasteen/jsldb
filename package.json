@@ -1,7 +1,7 @@
 {
   "name": "jsldb",
   "version": "0.1.2",
-  "description": "JavaScript Local Database",
+  "description": "JavaScript Light Database",
   "main": "index.js",
   "directories": {
     "doc": "docs"
