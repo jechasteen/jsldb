@@ -130,20 +130,6 @@ describe('validateResult', () => {
     })
 })
 
-describe('convertArrayToObject', () => {
-    test('return value should be object or null', () => {
-        const fakeQ = new Query('table', 'string', 'eq', 0)
-        const shouldLookLike = (() => {
-            const ret = {}
-            ret[entry1._id] = entry1
-            ret[entry2._id] = entry2
-            return ret
-        })()
-        expect(priv.convertEntryArrayToObject(fakeQ, [entry1._id, entry2._id]))
-            .toMatchObject(shouldLookLike)
-    })
-})
-
 describe('checkTableArrayOrId', () => {
     test('type === array with unsupported type should throw', () => {
         expect(() => {

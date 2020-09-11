@@ -14,17 +14,8 @@ if (!Object.size) {
     }
 }
 
-const getUUID = () => {
-    var RFC4122_TEMPLATE = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-    var replacePlaceholders = function (placeholder) {
-        var random = Math.round(Math.random() * 15)
-        var value = placeholder === 'x' ? random : (random & 0x3 | 0x8)
-        return value.toString(16)
-    }
-    return RFC4122_TEMPLATE.replace(/[xy]/g, replacePlaceholders)
-}
-
 module.exports = function (name, schema, options) {
+    const _static = require('./static')
     const supportedTypes = ['number', 'string', 'date']
     const _public = {}
     const _private = {}
@@ -35,26 +26,32 @@ module.exports = function (name, schema, options) {
         db.path = path.join(baseDir, `${name}.db.json`)
     }
 
-    setPath()
-
-    _private.validate = {
-        number: (val) => {
-            return typeof val === 'number'
-        },
-        string: (val) => {
-            return typeof val === 'string'
-        },
-        date: (val) => {
-            return val instanceof Date
+    // set default options if undefined
+    (() => {
+        const defaultOptions = {
+            backup: true,
+            backupUnique: true
         }
-    }
+
+        if (options === undefined || options === null) {
+            options = {}
+        }
+
+        for (var key in defaultOptions) {
+            if (options[key] === undefined || options[key] === null) {
+                options[key] = defaultOptions[key]
+            }
+        }
+    })()
+
+    setPath()
 
     _private.checkArrayOfType = (type, array) => {
         if (!array) return true
         if (array instanceof Array && array.length === 0) return true
         let ret = true
         array.forEach((v) => {
-            if (!_private.validate[type](v)) {
+            if (!_static.checkType[type](v)) {
                 ret = false
             }
         })
@@ -95,7 +92,7 @@ module.exports = function (name, schema, options) {
 
         if (s.length === 1) {
             // Simple type
-            return (_private.validate[type] && _private.validate[type](value))
+            return (_static.checkType[type] && _static.checkType[type](value))
         } else if (
             s[0] === 'array' &&
             s[1] !== 'id' &&
@@ -133,34 +130,6 @@ module.exports = function (name, schema, options) {
         return true
     }
 
-    _private.AND = (arr) => {
-        const common = []
-        while (arr.length > 1) {
-            for (var i in arr[0]) {
-                for (var j in arr[1]) {
-                    if (arr[0][i] === arr[1][j] && common.indexOf(arr[0][i] === -1)) {
-                        common.push(arr[0][i])
-                    }
-                }
-            }
-            arr.shift()
-            arr[0] = common
-        }
-        return common
-    }
-
-    _private.OR = (arr) => {
-        const all = []
-        for (var i in arr) {
-            for (var j in arr[i]) {
-                if (all.indexOf(arr[i][j]) === -1) {
-                    all.push(arr[i][j])
-                }
-            }
-        }
-        return all
-    }
-
     _private.validateResult = (result) => {
         const ret = []
         if (result instanceof Array) {
@@ -189,20 +158,6 @@ module.exports = function (name, schema, options) {
             throw new Error('Query parameter must be either an array of Query objects, or a single Query object.')
         }
         return _private.validateResult(found)
-    }
-
-    _private.convertEntryArrayToObject = (query, ids) => {
-        const ret = {}
-        for (var i in ids) {
-            ret[ids[i]] = db.tables[query.table][ids[i]]
-        }
-        return Object.size(ret) === 0 ? null : ret
-    }
-
-    _private.duplicateFileIfExists = () => {
-        if (fs.existsSync(db.path)) {
-            fs.copyFileSync(db.path, path.join(db.path + '.old'))
-        }
     }
 
     _private.search = (table, field, matchFn, search) => {
@@ -349,21 +304,21 @@ module.exports = function (name, schema, options) {
 
         if (found.length === 1) {
             if (findOptions.n === Infinity) {
-                ret = _private.convertEntryArrayToObject(query, found[0])
+                ret = _static.convertEntryArrayToObject(db.tables[query.table], found[0])
             } else {
-                ret = _private.convertEntryArrayToObject(query, found[0].slice(0, findOptions.n))
+                ret = _static.convertEntryArrayToObject(db.tables[query.table], found[0].slice(0, findOptions.n))
             }
         } else if (found.length > 1) {
             query = query[0]
             if (findOptions.queryLogic === 'AND') {
-                found = _private.AND(found)
+                found = _static.AND(found)
             } else if (findOptions.queryLogic === 'OR') {
-                found = _private.OR(found)
+                found = _static.OR(found)
             }
             if (findOptions.n === Infinity) {
-                ret = _private.convertEntryArrayToObject(query, found)
+                ret = _static.convertEntryArrayToObject(db.tables[query.table], found)
             } else {
-                ret = _private.convertEntryArrayToObject(query, found.slice(0, findOptions.n))
+                ret = _static.convertEntryArrayToObject(db.tables[query.table], found.slice(0, findOptions.n))
             }
         }
         if (typeof cb === 'function') cb(null, ret)
@@ -425,17 +380,19 @@ module.exports = function (name, schema, options) {
             }
         }
 
-        const id = getUUID()
+        const id = _static.getUUID()
         db.tables[table][id] = entry
         db.tables[table][id]._id = id
 
         cb(null, db.tables[table][id])
-        return Object.prototype.hasOwnProperty.call(db.tables[table], id)
-            ? db.tables[table][id] : null
+        return Object.prototype.hasOwnProperty.call(db.tables[table], id) ?
+            db.tables[table][id] : null
     }
 
     _public.save = (cb) => {
-        _private.duplicateFileIfExists()
+        if (options.backup) {
+            _static.duplicateFileIfExists(db.path, true)
+        }
 
         const dbJSON = JSON.stringify(db)
         if (typeof cb === 'function') {
@@ -448,7 +405,9 @@ module.exports = function (name, schema, options) {
     }
 
     _public.saveSync = () => {
-        _private.duplicateFileIfExists()
+        if (options.backup) {
+            _static.duplicateFileIfExists(db.path, true)
+        }
 
         const dbJSON = JSON.stringify(db)
         fs.writeFileSync(db.path, dbJSON, { encoding: 'utf8' })

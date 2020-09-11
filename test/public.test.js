@@ -138,10 +138,7 @@ describe('Entry insertion and modification', () => {
                 idLink: 'id table1'
             }
             expect(() => {
-                db.insert('table1', entry, (err, newEntry) => {
-                    expect(err).toBeDefined()
-                    expect(newEntry).toBeNull()
-                })
+                db.insert('table1', entry)
             }).toThrow()
         })
 
@@ -617,7 +614,7 @@ describe('delete operations', () => {
 
 describe('Faker', () => {
     test('Faker', () => {
-        const fakeQuant = 1000
+        const fakeQuant = 100
         const fakeDB = jsldb('fake', {
             people: {
                 name: {
