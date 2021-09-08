@@ -66,14 +66,14 @@ let db
 
 describe('Creation, saving, and connection', () => {
     test('Create new database', () => {
-        db = jsldb.relational('test', passingSchemas)
+        db = jsldb.connect('test', passingSchemas)
         expect(db).toBeTruthy()
     })
 
     test('Creation errors', () => {
         for (var bad in failingSchemas) {
             try {
-                jsldb.relational('bad', failingSchemas[bad])
+                jsldb.connect('bad', failingSchemas[bad])
             } catch (e) {
                 expect(e).toBeDefined()
             }
@@ -85,7 +85,7 @@ describe('Creation, saving, and connection', () => {
     })
 
     test('Connect to existing database', () => {
-        db = jsldb.relational('test', passingSchemas)
+        db = jsldb.connect('test', passingSchemas)
         expect(db).toBeTruthy()
     })
 })
@@ -619,7 +619,7 @@ describe('delete operations', () => {
 describe('Faker', () => {
     test('Faker', () => {
         const fakeQuant = 1000
-        const fakeDB = jsldb.relational('fake', {
+        const fakeDB = jsldb.connect('fake', {
             people: {
                 name: {
                     type: 'string',

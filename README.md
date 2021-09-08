@@ -64,7 +64,7 @@ const tables = {
     }
 }
 
-const db = jsldb.relational('newdb', tables)
+const db = jsldb.connect('newdb', tables)
 
 app.get('/table1/:id', (req, res) => {
     db.findById('table1', req.params.id, (err, data) => {

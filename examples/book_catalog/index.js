@@ -10,7 +10,6 @@ const path = require('path')
 // Set up express, body-parser and jsldb
 const express = require('express')
 const app = express()
-const bodyParser = require('body-parser')
 const db = require('../../')
 
 const bookSchema = {
@@ -37,13 +36,14 @@ const bookSchema = {
     }
 }
 
-const books = db.relational('books', { books: bookSchema })
+const books = db.connect('books', { books: bookSchema })
 
 //
 // Express properties
 app.set('views', path.join(__dirname, './'))
 app.set('view engine', 'ejs')
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(express.urlencoded({ extended: true }))
+app.use(express.json())
 app.use(express.static(path.join(__dirname, './')))
 
 //

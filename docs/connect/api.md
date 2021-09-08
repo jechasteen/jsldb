@@ -1,4 +1,4 @@
-# jsldb.relational
+# jsldb
 
 [Glossary](../Glossary.md) of terms used in this document
 
@@ -6,7 +6,7 @@
 
 ### `const jsldb = require('jsldb')`
 
-### `jsldb.relational(dbName, tableSchemas)`
+### `jsldb.connect(dbName, tableSchemas)`
 
 |param|type|desc|
 |-----|----|----|

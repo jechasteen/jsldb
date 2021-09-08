@@ -23,7 +23,7 @@ const privSchema = {
         }
     }
 }
-const db = require('../').relational('priv', privSchema)
+const db = require('../').connect('priv', privSchema)
 const priv = db.__test__
 
 let entry1 = {
