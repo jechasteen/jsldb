@@ -1,14 +1,13 @@
 {
   "name": "jsldb",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "JavaScript Local Database",
   "main": "index.js",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
-    "test": "node_modules/.bin/jest --no-cache --coverage",
-    "docs": "node_modules/.bin/jsdoc -c .jsdoc.json -u docs/tutorials/ --verbose"
+    "test": "node_modules/.bin/jest --no-cache --coverage"
   },
   "repository": {
     "type": "git",
@@ -22,7 +21,7 @@
     "local"
   ],
   "author": "Jonathan Chasteen <jonathan.chasteen@live.com>",
-  "license": "BSD",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/jechasteen/jsldb/issues"
   },
